@@ -1,0 +1,32 @@
+rules_version = '2';
+
+// MysticAI Firestore security rules.
+//
+// Deploy with: firebase deploy --only firestore:rules
+// Or paste into Firebase Console → Firestore → Rules.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Per-user data — only the signed-in owner can read/write their own
+    // subtree. Conversations and their messages all live under here so
+    // the same rule covers them recursively.
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Translation cache — content-addressed by SHA-256(lang+text), no PII.
+    // Anyone (including unauthenticated server-side calls from /api/translate)
+    // can read or create new entries. Updates and deletes are forbidden so
+    // entries are immutable once written.
+    match /translations/{key} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if false;
+    }
+  }
+}

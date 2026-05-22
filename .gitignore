@@ -1,0 +1,28 @@
+# Dependencies
+node_modules
+
+# Next.js build output
+.next
+out
+build
+
+# Environment files — NEVER commit these (contain real API keys & secrets).
+# .env.local.example is the safe placeholder template and IS committed.
+.env
+.env.local
+.env*.local
+
+# Logs
+*.log
+
+# Build / tooling caches
+next-env.d.ts
+tsconfig.tsbuildinfo
+.vercel
+.DS_Store
+
+# Local Claude Code settings (per-machine permissions, not shareable)
+.claude/settings.local.json
+
+# Misc
+scripts/.raw

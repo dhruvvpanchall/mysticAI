@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Anchor links land below the fixed navbar. */
+    scroll-padding-top: 6rem;
+  }
+
+  html,
+  body {
+    height: 100%;
+    background-color: #05030d;
+    color: rgba(255, 255, 255, 0.92);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Disable rubber-banding overscroll on iOS — keeps the chat composer
+       anchored when the user pulls down. */
+    overscroll-behavior-y: none;
+  }
+
+  body {
+    font-family: var(--font-sans), system-ui, sans-serif;
+    overflow-x: hidden;
+    /* Letting iOS pick text-zoom-on-rotate would shift the chat layout. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Inputs and textareas must be at least 16px on iOS Safari, otherwise
+     focusing them auto-zooms the page. This is a global safety net even
+     though we set text-base on the chat composer. */
+  @media (max-width: 768px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
+  /* Respect users who ask for less motion, and kill the expensive
+     infinite animations that cause scroll jank for everyone else. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Selection styling */
+  ::selection {
+    background: rgba(245, 166, 35, 0.35);
+    color: #fff;
+  }
+
+  /* Scrollbar — thin everywhere. Firefox uses scrollbar-width; WebKit
+     (Chrome, Edge, Safari) uses the pseudo-element. Both kept in sync. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(245, 166, 35, 0.35) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(124, 58, 237, 0.45), rgba(245, 166, 35, 0.4));
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(124, 58, 237, 0.7), rgba(245, 166, 35, 0.6));
+  }
+}
+
+@layer components {
+  /* Glassmorphic surface */
+  /* Lighter blur radii — heavy backdrop-filter is the main cause of
+     scroll repaint cost when it sits over the fixed animated bg. */
+  .glass {
+    background: linear-gradient(
+      135deg,
+      rgba(20, 12, 40, 0.55) 0%,
+      rgba(10, 6, 24, 0.5) 100%
+    );
+    backdrop-filter: blur(12px) saturate(130%);
+    -webkit-backdrop-filter: blur(12px) saturate(130%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-strong {
+    background: linear-gradient(
+      135deg,
+      rgba(22, 14, 44, 0.62) 0%,
+      rgba(10, 6, 24, 0.58) 100%
+    );
+    backdrop-filter: blur(14px) saturate(135%);
+    -webkit-backdrop-filter: blur(14px) saturate(135%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Glowing border using mask + gradient */
+  .glow-border {
+    position: relative;
+    isolation: isolate;
+  }
+  .glow-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      rgba(245, 166, 35, 0.55),
+      rgba(124, 58, 237, 0.45) 35%,
+      rgba(34, 211, 238, 0.35) 65%,
+      rgba(245, 166, 35, 0.55)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* Shimmer text — divine gold */
+  .text-divine {
+    background: linear-gradient(
+      90deg,
+      #f5d76e 0%,
+      #f5a623 25%,
+      #ffd089 50%,
+      #f5a623 75%,
+      #f5d76e 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer-text 6s linear infinite;
+  }
+
+  /* Subtle aurora bg used inside cards */
+  .aurora-surface {
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(124, 58, 237, 0.25), transparent 55%),
+      radial-gradient(ellipse at 80% 90%, rgba(245, 166, 35, 0.18), transparent 55%),
+      linear-gradient(180deg, rgba(10, 6, 24, 0.85), rgba(5, 3, 13, 0.95));
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .mask-radial-fade {
+    mask-image: radial-gradient(ellipse at center, black 55%, transparent 85%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 55%, transparent 85%);
+  }
+
+  /* Skip rendering/painting of offscreen sections — major scroll win
+     on a long page. contain-intrinsic-size keeps the scrollbar stable. */
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 720px;
+  }
+
+  .gpu {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+}
