@@ -704,7 +704,7 @@ export default function ChatPage() {
                 </h1>
                 <p className="mt-3 max-w-md text-balance text-[13px] text-ink-soft sm:text-sm">
                   Describe your situation in plain words. Every answer cites a
-                  real verse from the Bhagavad Gita — nothing is invented.
+                  real verse from the Bhagavad Gita. Nothing is invented.
                 </p>
 
                 <div className="mt-7 grid w-full gap-2.5 sm:mt-9 sm:grid-cols-2">
@@ -890,7 +890,7 @@ export default function ChatPage() {
               </button>
             </div>
             <p className="mt-2 text-center text-[11px] text-ink-muted">
-              MysticAI retrieves real verses — it never invents scripture.
+              MysticAI retrieves real verses. It never invents scripture.
             </p>
           </div>
         </div>

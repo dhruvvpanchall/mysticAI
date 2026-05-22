@@ -61,7 +61,7 @@ function Hero() {
       >
         When life feels heavy,{" "}
         <span className="relative inline-block text-maroon">
-          ask the Gita.
+          ask MysticAI.
           <span
             aria-hidden
             className="absolute -bottom-1 left-0 right-0 h-2 -skew-y-1 rounded-full bg-saffron/35"
@@ -75,9 +75,9 @@ function Hero() {
         transition={{ duration: 0.8, delay: 0.25 }}
         className="mt-7 max-w-2xl text-balance text-base text-ink-soft sm:text-lg"
       >
-        MysticAI answers real situations — overthinking, heartbreak, fear of
-        the future — with verses you can verify, in words that sound like
-        someone who has actually read the text.
+        MysticAI answers real situations like overthinking, heartbreak, and
+        fear of the future, with verses you can verify, in words that sound
+        like someone who has actually read the text.
       </motion.p>
 
       <motion.div
@@ -93,7 +93,7 @@ function Hero() {
             rightIcon={<ArrowRight size={18} />}
             className="w-full sm:w-auto"
           >
-            Start asking — free
+            Start asking for free
           </GlowingButton>
         </Link>
         <Link href="#wisdom" className="w-full sm:w-auto">
@@ -156,12 +156,12 @@ const topics = [
   {
     icon: Brain,
     title: "Overthinking & anxiety",
-    body: "When the mind won't slow down. Krishna calls it 'restless, turbulent, strong' — and offers a way to steady it.",
+    body: "When the mind won't slow down. Krishna calls it 'restless, turbulent, strong', and offers a way to steady it.",
   },
   {
     icon: Heart,
     title: "Heartbreak & loss",
-    body: "Grief, betrayal, the ache of someone leaving. The Gita doesn't rush you past it — it sits beside it.",
+    body: "Grief, betrayal, the ache of someone leaving. The Gita doesn't rush you past it. It sits beside it.",
   },
   {
     icon: Briefcase,
@@ -171,7 +171,7 @@ const topics = [
   {
     icon: Flame,
     title: "Anger you can't control",
-    body: "The verses on anger are surprisingly modern — what it does to clarity, and how it loosens.",
+    body: "The verses on anger are surprisingly modern: what it does to clarity, and how it loosens.",
   },
   {
     icon: Waves,
@@ -181,7 +181,7 @@ const topics = [
   {
     icon: Compass,
     title: "Purpose & meaning",
-    body: "What is mine to do? The Gita's central question — answered through your own situation.",
+    body: "What is mine to do? The Gita's central question, answered through your own situation.",
   },
   {
     icon: Users,
@@ -191,7 +191,7 @@ const topics = [
   {
     icon: MessageCircleHeart,
     title: "Hard decisions",
-    body: "Two paths and no clarity. Krishna spoke directly to a man frozen on a battlefield — same energy.",
+    body: "Two paths and no clarity. Krishna spoke directly to a man frozen on a battlefield. Same energy.",
   },
 ];
 
@@ -208,7 +208,7 @@ function Topics() {
           ask
         </SectionTitle>
         <SectionSubtitle>
-          Not philosophical puzzles — real life. Whatever you&rsquo;d bring
+          Not philosophical puzzles, just real life. Whatever you&rsquo;d bring
           to a trusted friend, the Gita has met it before.
         </SectionSubtitle>
       </Reveal>
@@ -289,7 +289,7 @@ function SampleAnswer() {
                   <strong className="font-semibold text-ink">
                     The Gita speaks directly to this.
                   </strong>{" "}
-                  Krishna teaches that your power lies in the action itself —
+                  Krishna teaches that your power lies in the action itself,
                   not in its outcome:
                 </p>
 
@@ -304,7 +304,7 @@ function SampleAnswer() {
                     </div>
                     <p className="font-display text-lg leading-snug text-ink sm:text-xl">
                       &ldquo;You have the right to perform your duty, but never
-                      to the fruits of your actions.&rdquo;
+                      to the results of your actions.&rdquo;
                     </p>
                     <p className="mt-2 text-xs italic text-ink-muted">
                       karmaṇy-evādhikāras te mā phaleṣhu kadāchana
@@ -367,7 +367,7 @@ const verses = [
   {
     ref: "Bhagavad Gita 6.34",
     translation:
-      "The mind is indeed restless and difficult to subdue — turbulent, strong, unyielding. As difficult to control as the wind.",
+      "The mind is indeed restless and difficult to subdue, turbulent, strong, unyielding. As difficult to control as the wind.",
     transliteration: "chañchalaṁ hi manaḥ kṛiṣhṇa pramāthi balavad dṛiḍham",
     reflection:
       "Krishna names what you already feel. Naming it is the first softening.",
@@ -376,7 +376,7 @@ const verses = [
   {
     ref: "Bhagavad Gita 2.47",
     translation:
-      "You have the right to perform your duty, but never to the fruits of your actions.",
+      "You have the right to perform your duty, but never to the results of your actions.",
     transliteration: "karmaṇy-evādhikāras te mā phaleṣhu kadāchana",
     reflection:
       "Effort is yours; outcome is not. The worry loosens the moment you separate them.",
@@ -388,7 +388,7 @@ const verses = [
       "Contact of the senses with objects gives rise to feelings of heat and cold, pleasure and pain. They come and go and are impermanent. Endure them.",
     transliteration: "mātrā-sparśhās tu kaunteya śhītoṣhṇa-sukha-duḥkha-dāḥ",
     reflection:
-      "Whatever you're carrying today is real — and not the whole of you. It passes.",
+      "Whatever you're carrying today is real, and not the whole of you. It passes.",
     topic: "On hard seasons",
   },
   {
@@ -398,7 +398,7 @@ const verses = [
     transliteration:
       "sarva-dharmān parityajya mām ekaṁ śharaṇaṁ vraja",
     reflection:
-      "The closing verse of the Gita. After every argument — gentleness, and an invitation to stop carrying it alone.",
+      "The closing verse of the Gita. After every argument comes gentleness, and an invitation to stop carrying it alone.",
     topic: "On letting go",
   },
 ];
@@ -417,7 +417,7 @@ function WisdomShowcase() {
           </SectionTitle>
           <SectionSubtitle>
             Real text, from the public-domain corpus MysticAI draws on. Not
-            paraphrases — the verses themselves, with a one-line invitation.
+            paraphrases, but the verses themselves, with a one-line invitation.
           </SectionSubtitle>
         </Reveal>
 
@@ -484,7 +484,7 @@ const steps = [
   {
     icon: Search,
     title: "It finds the verse",
-    body: "From a verified Bhagavad Gita corpus — 700+ shlokas. The matching verse is retrieved, never invented.",
+    body: "From a verified Bhagavad Gita corpus of 700+ shlokas. The matching verse is retrieved, never invented.",
   },
   {
     icon: BookOpenText,
@@ -548,14 +548,14 @@ const testimonials = [
     role: "Designer, Bengaluru",
     initials: "AR",
     quote:
-      "I asked at 3am when I couldn't sleep. The answer felt like a friend who'd actually read the text. It pointed me to 6.34 — the verse about the restless mind. Sat with it for an hour and finally slept.",
+      "I asked at 3am when I couldn't sleep. The answer felt like a friend who'd actually read the text. It pointed me to 6.34, the verse about the restless mind. Sat with it for an hour and finally slept.",
   },
   {
     name: "Vikram S.",
     role: "Founder, Pune",
     initials: "VS",
     quote:
-      "I was skeptical about AI for something this personal. But every reply cites a real verse — I checked three of them against a paper copy. It's the real thing, translated for now.",
+      "I was skeptical about AI for something this personal. But every reply cites a real verse. I checked three of them against a paper copy. It's the real thing, translated for now.",
   },
   {
     name: "Priya M.",
@@ -620,15 +620,15 @@ function Testimonials() {
 const faqs = [
   {
     q: "Are the verses real, or does the AI make them up?",
-    a: "Every verse is pulled from a verified, public-domain Bhagavad Gita corpus before the AI writes its reply. The model is forbidden to invent shlokas — if no verse genuinely fits, it paraphrases Krishna's teaching instead. Every citation is real and verifiable.",
+    a: "Every verse is pulled from a verified, public-domain Bhagavad Gita corpus before the AI writes its reply. The model is forbidden to invent shlokas. If no verse genuinely fits, it paraphrases Krishna's teaching instead. Every citation is real and verifiable.",
   },
   {
     q: "Is MysticAI a substitute for therapy?",
-    a: "No. MysticAI offers reflection, perspective, and timeless wisdom — useful for many ordinary hard moments. For ongoing mental health concerns, please reach out to a qualified professional. MysticAI is not a clinical service.",
+    a: "No. MysticAI offers reflection, perspective, and timeless wisdom, useful for many ordinary hard moments. For ongoing mental health concerns, please reach out to a qualified professional. MysticAI is not a clinical service.",
   },
   {
     q: "What if I'm in crisis right now?",
-    a: "If you're thinking about suicide or self-harm, MysticAI will quietly step aside and give you real helplines (iCall, Vandrevala, 988, Samaritans) before anything else. Please reach out to a human first — we're built to help, not to replace human help in those moments.",
+    a: "If you're thinking about suicide or self-harm, MysticAI will quietly step aside and give you real helplines (iCall, Vandrevala, 988, Samaritans) before anything else. Please reach out to a human first. We're built to help, not to replace human help in those moments.",
   },
   {
     q: "Does it speak Hindi?",
@@ -636,7 +636,7 @@ const faqs = [
   },
   {
     q: "Will MysticAI judge me?",
-    a: "No. There is no shame in what you bring. The Gita itself opens with Arjuna paralyzed by despair — and Krishna does not shame him. He listens, then teaches. MysticAI inherits that posture.",
+    a: "No. There is no shame in what you bring. The Gita itself opens with Arjuna paralyzed by despair, and Krishna does not shame him. He listens, then teaches. MysticAI inherits that posture.",
   },
   {
     q: "How much does it cost?",
@@ -780,7 +780,7 @@ function Pricing() {
             Start free. <span className="text-maroon">Go deeper anytime.</span>
           </SectionTitle>
           <SectionSubtitle>
-            A generous free tier forever — upgrade for unlimited wisdom and
+            A generous free tier forever. Upgrade for unlimited wisdom and
             scholarly depth.
           </SectionSubtitle>
         </Reveal>
@@ -863,7 +863,7 @@ function FinalCTA() {
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-balance text-ink-soft">
               Join the seekers turning to timeless wisdom for modern life. Free
-              to begin — no scripture knowledge required.
+              to begin, no scripture knowledge required.
             </p>
             <div className="mt-9 flex justify-center">
               <Link href="/signup">
@@ -882,7 +882,7 @@ function FinalCTA() {
                 the self.&rdquo;
               </blockquote>
               <figcaption className="mt-3 text-[11px] uppercase tracking-[0.3em] text-maroon">
-                — Bhagavad Gita 6.20
+                Bhagavad Gita 6.20
               </figcaption>
             </figure>
           </div>

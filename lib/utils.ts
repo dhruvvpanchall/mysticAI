@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export const spiritualQuotes: { text: string; source: string }[] = [
   {
-    text: "You have the right to perform your duty, but not to the fruits of your actions.",
+    text: "You have the right to perform your duty, but not to the results of your actions.",
     source: "Bhagavad Gita 2.47",
   },
   {

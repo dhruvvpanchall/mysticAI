@@ -118,7 +118,7 @@ INPUT:
 I am well and grateful for this moment to connect with you. As we come together, I sense that you may be seeking guidance or clarity on something. If there's something on your mind that you'd like to explore, I'm here to listen and offer support.
 
 OUTPUT:
-मैं अच्छा हूँ और इस क्षण आपसे जुड़ने के लिए आभारी हूँ। जब हम एक साथ आते हैं, मुझे लगता है कि शायद आप किसी बात पर मार्गदर्शन या स्पष्टता खोज रहे हैं। यदि आपके मन में कोई बात है जिसे आप जानना चाहेंगे, तो मैं यहाँ हूँ — सुनने और सहायता देने के लिए।
+मैं अच्छा हूँ और इस क्षण आपसे जुड़ने के लिए आभारी हूँ। जब हम एक साथ आते हैं, मुझे लगता है कि शायद आप किसी बात पर मार्गदर्शन या स्पष्टता खोज रहे हैं। यदि आपके मन में कोई बात है जिसे आप जानना चाहेंगे, तो मैं यहाँ हूँ, सुनने और सहायता देने के लिए।
 
 EXAMPLE B — short welcome, mixed first and second person:
 
@@ -137,7 +137,7 @@ INPUT:
 > "Yoga becomes the destroyer of pain for him who is moderate in eating and recreation."
 > _yuktāhāra-vihārasya yukta-cheṣhṭasya karmasu_
 
-**What this means** — Krishna teaches that balance dissolves suffering.
+**What this means:** Krishna teaches that balance dissolves suffering.
 
 OUTPUT:
 **आपका मन दौड़ रहा है** चिंता से।
@@ -146,7 +146,7 @@ OUTPUT:
 > "योग उस व्यक्ति के लिए दुःख का नाश करने वाला बनता है जो खाने-पीने और मनोरंजन में संयम रखता है।"
 > _yuktāhāra-vihārasya yukta-cheṣhṭasya karmasu_
 
-**इसका अर्थ है** — कृष्ण सिखाते हैं कि संतुलन दुःख को मिटा देता है।`;
+**इसका अर्थ है:** कृष्ण सिखाते हैं कि संतुलन दुःख को मिटा देता है।`;
 }
 
 export async function POST(req: NextRequest) {

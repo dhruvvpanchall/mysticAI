@@ -109,7 +109,7 @@ export function QuotePanel() {
       >
         <Trust
           icon={<ShieldCheck size={15} />}
-          label="No invented shlokas — every verse is real and cited."
+          label="No invented shlokas. Every verse is real and cited."
         />
         <Trust
           icon={<BookOpenText size={15} />}

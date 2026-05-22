@@ -86,7 +86,7 @@ function friendlyError(err: unknown): string {
     case "auth/account-exists-with-different-credential":
       return "This email is already linked to a different sign-in method. Try email + password.";
     case "auth/network-request-failed":
-      return "Network trouble — check your connection and try again.";
+      return "Network trouble. Check your connection and try again.";
     default:
       if (err instanceof Error && err.message) return err.message;
       return "Something went wrong. Please try again.";
