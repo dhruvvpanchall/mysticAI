@@ -226,6 +226,11 @@ export default function ChatPage() {
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const taRef = React.useRef<HTMLTextAreaElement>(null);
+  // In-flight Firestore conversation creates, keyed by their optimistic
+  // `local-` id. send() awaits the SAME promise instead of starting a
+  // second create — a duplicate create races the temp-id→real-id swap and
+  // leaves streaming writes pointing at an id no longer in state.
+  const pendingCreates = React.useRef<Map<string, Promise<string>>>(new Map());
 
   React.useEffect(() => {
     if (!authLoading && !user) router.replace("/login");
@@ -349,17 +354,20 @@ export default function ChatPage() {
     setConversations((cs) => [conv, ...cs]);
     setActiveId(tempId);
     if (user) {
-      fsCreateConversation(user.id, conv.title)
-        .then((realId) => {
+      const create = fsCreateConversation(user.id, conv.title).then(
+        (realId) => {
           // Swap the temp id for the Firestore id everywhere in state.
           setConversations((cs) =>
             cs.map((c) => (c.id === tempId ? { ...c, id: realId } : c))
           );
           setActiveId((prev) => (prev === tempId ? realId : prev));
-        })
-        .catch((err) =>
-          console.error("[chat] createConversation failed:", err)
-        );
+          return realId;
+        }
+      );
+      pendingCreates.current.set(tempId, create);
+      create.catch((err) =>
+        console.error("[chat] createConversation failed:", err)
+      );
     }
     return conv;
   }
@@ -418,23 +426,33 @@ export default function ChatPage() {
     setInput("");
     setStreaming(true);
 
-    // If the active conversation hasn't finished creating in Firestore yet
-    // (still has a `local-` id from an optimistic startNewConversation), do
-    // the create now and use its real id for the rest of the writes.
+    // If the active conversation is still being created in Firestore (it
+    // still carries the optimistic `local-` id), wait for that SAME create
+    // to finish rather than starting a second one. A duplicate create races
+    // the id-swap and streaming writes end up targeting a stale id.
     if (conversationId.startsWith("local-")) {
+      const tempId = conversationId;
       try {
-        const realId = await fsCreateConversation(user.id, title);
-        const tempId = conversationId;
-        conversationId = realId;
+        const pending = pendingCreates.current.get(tempId);
+        conversationId = pending
+          ? await pending
+          : await fsCreateConversation(user.id, title);
+        pendingCreates.current.delete(tempId);
+        // The shared promise's .then already ran this swap; repeat it
+        // idempotently so the no-pending fallback above is also covered.
         setConversations((cs) =>
-          cs.map((c) => (c.id === tempId ? { ...c, id: realId } : c))
+          cs.map((c) => (c.id === tempId ? { ...c, id: conversationId } : c))
         );
-        setActiveId((prev) => (prev === tempId ? realId : prev));
+        setActiveId((prev) => (prev === tempId ? conversationId : prev));
       } catch (err) {
         console.error("[chat] createConversation (deferred) failed:", err);
       }
-    } else if (isFirstMessage) {
-      // First message in an existing-but-empty conversation: update title.
+    }
+
+    // First message: ensure the Firestore conversation title reflects it.
+    // startNewConversation creates the doc titled "New conversation", so the
+    // message-derived title must be pushed once the real id is known.
+    if (isFirstMessage && !conversationId.startsWith("local-")) {
       fsUpdateConversation(user.id, conversationId, { title }).catch((err) =>
         console.error("[chat] updateConversation title failed:", err)
       );
