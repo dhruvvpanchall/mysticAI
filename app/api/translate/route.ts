@@ -8,12 +8,49 @@ export const runtime = "nodejs";
 export const maxDuration = 30;
 
 /**
- * Content-addressed cache key. Same (lang, text) from any seeker hits the
- * same Firestore doc — translation is deterministic enough that sharing
- * across users is correct and saves repeated LLM calls.
+ * Bump this whenever the translation system prompt or sanitization logic
+ * changes. The version is folded into the cache key, so old (possibly bad)
+ * entries are atomically ignored without needing to wipe Firestore. A prior
+ * LLM glitch had poisoned the `who are you?` Hindi translation across users;
+ * v2 is the first version that ships the streaming + validation guards.
+ */
+const CACHE_VERSION = "v2";
+
+/**
+ * Content-addressed cache key. Same (version, lang, text) from any seeker
+ * hits the same Firestore doc — translation is deterministic enough that
+ * sharing across users is correct and saves repeated LLM calls.
  */
 function cacheKey(lang: string, text: string): string {
-  return createHash("sha256").update(`${lang}\n${text}`).digest("hex");
+  return createHash("sha256")
+    .update(`${CACHE_VERSION}\n${lang}\n${text}`)
+    .digest("hex");
+}
+
+/**
+ * Reject obvious non-translations before writing them to the shared cache.
+ * The LLM occasionally answers the message instead of translating it (the
+ * exact failure mode that the `who are you?` Hindi card showed). These
+ * checks aren't bulletproof — they're floor guards so a single bad run
+ * cannot get pinned in the global cache for every future seeker.
+ */
+function isValidTranslation(
+  text: string,
+  lang: string,
+  source: string
+): boolean {
+  if (!text || text.trim().length === 0) return false;
+  // Hindi must actually be Devanagari.
+  if (lang === "hi" && !/[ऀ-ॿ]/.test(text)) return false;
+  // Length-ratio sanity check. A genuine translation usually lands within
+  // 0.5x–3x the source length. The actual `who are you?` failure was the
+  // LLM emitting a 2-sentence meta-response (~120 chars) for a 285-char
+  // source — ratio ~0.4, caught here. Short inputs get a 30-char floor so
+  // greetings ("Hi") with a slightly longer Hindi welcome aren't rejected.
+  const srcLen = Math.max(source.length, 30);
+  if (text.length < srcLen * 0.5) return false;
+  if (text.length > srcLen * 3 + 200) return false;
+  return true;
 }
 
 async function readCache(key: string): Promise<string | null> {
@@ -90,6 +127,8 @@ ABSOLUTE RULES — follow every one:
 2. Preserve ALL markdown structure exactly: blockquote lines (starting with \`>\`), \`**bold**\` markers, \`_italic_\` markers, blank lines, paragraph breaks. Same count as input.
 
 3. Do NOT translate verse references. \`**Bhagavad Gita 3.35**\` stays as \`**Bhagavad Gita 3.35**\` — keep the English words "Bhagavad Gita" and the chapter:verse numbers EXACTLY.
+
+3b. PRESERVE THE BRAND NAME. The product is called "MysticAI". Whenever this word appears in the input, copy it byte-for-byte in Roman letters — never transliterate it to Devanagari (NOT मिस्टिकएआई, NOT मिस्टिक एआई). Treat it like a proper noun written in English script that must survive the translation untouched.
 
 4. When (and ONLY when) the input contains a verse blockquote with exactly THREE lines, keep them in this EXACT order and format:
    Line 1: \`> **Bhagavad Gita C.V**\`  — the reference, untouched.
@@ -200,22 +239,47 @@ export async function POST(req: NextRequest) {
       model: MODEL,
       max_tokens: 4096,
       temperature: 0.3,
+      stream: true,
       messages: [
         { role: "system", content: systemPrompt(spec) },
         { role: "user", content: text },
       ],
     });
-    const raw = completion.choices[0]?.message?.content ?? "";
-    // Strip fabricated blockquote lines: if the input had no verse quote,
-    // any `> ...` line in the output is a hallucinated verse and gets
-    // dropped. Plain greetings must never gain a verse via translation.
-    const sanitized = inputHadBlockquote
-      ? raw
-      : stripBlockquotes(raw);
-    const cleaned = restoreTransliterations(sanitized, originalTranslits);
-    // Fire-and-forget cache write — don't make the seeker wait on it.
-    void writeCache(key, lang, cleaned);
-    return new Response(cleaned, {
+
+    const enc = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        let full = "";
+        try {
+          for await (const chunk of completion) {
+            const delta = chunk.choices[0]?.delta?.content;
+            if (delta) {
+              full += delta;
+              controller.enqueue(enc.encode(delta));
+            }
+          }
+          controller.close();
+        } catch (err) {
+          console.error("[translate] stream error:", err);
+          controller.error(err);
+          return;
+        }
+        // Sanitize and cache AFTER the stream closes. The user already sees
+        // the live tokens; this just controls what the next seeker gets.
+        const sanitized = inputHadBlockquote ? full : stripBlockquotes(full);
+        const cleaned = restoreTransliterations(sanitized, originalTranslits);
+        if (isValidTranslation(cleaned, lang, text)) {
+          void writeCache(key, lang, cleaned);
+        } else {
+          console.warn(
+            "[translate] rejected invalid output; not caching",
+            { lang, sourceLen: text.length, outLen: cleaned.length }
+          );
+        }
+      },
+    });
+
+    return new Response(stream, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-store",

@@ -19,6 +19,7 @@ import {
   createConversation as fsCreateConversation,
   deleteConversation as fsDeleteConversation,
   listConversations as fsListConversations,
+  removeMessageTranslation as fsRemoveMessageTranslation,
   setMessageTranslation as fsSetMessageTranslation,
   updateConversation as fsUpdateConversation,
 } from "@/lib/conversations";
@@ -91,6 +92,25 @@ function titleFromMessage(text: string): string {
   const cleaned = text.replace(/\s+/g, " ").trim();
   if (!cleaned) return "New conversation";
   return cleaned.length > 42 ? `${cleaned.slice(0, 42)}…` : cleaned;
+}
+
+/**
+ * Mirror of the server-side guard in app/api/translate/route.ts. Used to
+ * evict bad translations that were already pinned to a message before
+ * validation existed (a previous LLM glitch dropped a non-translation into
+ * the cache; users still see it until we wipe the per-message copy).
+ */
+function isValidTranslation(
+  text: string | undefined,
+  lang: Exclude<Lang, "en">,
+  source: string
+): boolean {
+  if (!text || text.trim().length === 0) return false;
+  if (lang === "hi" && !/[ऀ-ॿ]/.test(text)) return false;
+  const srcLen = Math.max(source.length, 30);
+  if (text.length < srcLen * 0.5) return false;
+  if (text.length > srcLen * 3 + 200) return false;
+  return true;
 }
 
 /* ------------------------------------------------------------------ */
@@ -251,12 +271,43 @@ export default function ChatPage() {
           title: c.title,
           createdAt: c.createdAt,
           updatedAt: c.updatedAt,
-          messages: c.messages.map((m) => ({
-            id: m.id,
-            role: m.role,
-            content: m.content,
-            translations: m.translations,
-          })),
+          messages: c.messages.map((m) => {
+            // Evict any stored translation that no longer looks valid (a
+            // prior LLM glitch could have pinned a non-translation onto the
+            // message). Firestore mirror runs fire-and-forget below.
+            let translations = m.translations;
+            if (translations) {
+              const kept: Partial<Record<Lang, string>> = {};
+              const dropped: Array<Exclude<Lang, "en">> = [];
+              for (const [code, text] of Object.entries(translations) as Array<
+                [Exclude<Lang, "en">, string]
+              >) {
+                if (isValidTranslation(text, code, m.content)) {
+                  kept[code] = text;
+                } else {
+                  dropped.push(code);
+                }
+              }
+              if (dropped.length) {
+                translations = Object.keys(kept).length ? kept : undefined;
+                for (const code of dropped) {
+                  fsRemoveMessageTranslation(user.id, c.id, m.id, code).catch(
+                    (err) =>
+                      console.error(
+                        "[chat] removeMessageTranslation failed:",
+                        err
+                      )
+                  );
+                }
+              }
+            }
+            return {
+              id: m.id,
+              role: m.role,
+              content: m.content,
+              translations,
+            };
+          }),
         }));
         setConversations(convs);
         const savedActive = localStorage.getItem(ACTIVE_KEY(user.id));

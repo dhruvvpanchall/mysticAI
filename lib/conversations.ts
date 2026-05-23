@@ -23,6 +23,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDocs,
   orderBy,
@@ -192,5 +193,17 @@ export async function setMessageTranslation(
 ): Promise<void> {
   await updateDoc(messageDoc(uid, convId, msgId), {
     [`translations.${lang}`]: text,
+  });
+}
+
+/** Remove a stored translation (used on load to evict invalid entries). */
+export async function removeMessageTranslation(
+  uid: string,
+  convId: string,
+  msgId: string,
+  lang: Exclude<Lang, "en">
+): Promise<void> {
+  await updateDoc(messageDoc(uid, convId, msgId), {
+    [`translations.${lang}`]: deleteField(),
   });
 }
