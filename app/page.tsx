@@ -124,27 +124,95 @@ function Hero() {
         </span>
       </motion.div>
 
-      {/* Rating + seeker count */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.7 }}
-        className="mt-10 inline-flex items-center gap-3 rounded-full border border-parchment-muted bg-parchment px-4 py-2 text-sm text-ink-soft shadow-[0_8px_30px_-16px_rgba(122,31,31,0.2)]"
-      >
-        <span className="inline-flex">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <Star
-              key={i}
-              size={14}
-              className="fill-saffron text-saffron"
-            />
-          ))}
-        </span>
-        <span className="font-medium text-ink">4.9</span>
-        <span className="h-3 w-px bg-parchment-muted" />
-        <span>Loved by 12,400+ seekers</span>
-      </motion.div>
+      {/* Holy-books marquee — what MysticAI covers today and what's
+          on the way. The seeker reads the scrolling pills and gets an
+          honest snapshot of the corpus (one LIVE source, several queued). */}
+      <HolyBooksMarquee />
     </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Holy books marquee — corpus today + future grant roadmap            */
+/* ------------------------------------------------------------------ */
+
+type BookStatus = "live" | "soon";
+
+interface HolyBook {
+  name: string;
+  status: BookStatus;
+}
+
+// One LIVE source, the rest queued. Order is roughly by adjacency to the
+// Bhagavad Gita: closest Sanatan-dharma corpora first, then Sikh +
+// Buddhist neighbors. Swap freely — order = marquee order.
+const HOLY_BOOKS: HolyBook[] = [
+  { name: "Bhagavad Gita", status: "live" },
+  { name: "Ramayana", status: "soon" },
+  { name: "Upanishads", status: "soon" },
+  { name: "Yoga Sutras", status: "soon" },
+  { name: "Hanuman Chalisa", status: "soon" },
+  { name: "Ashtavakra Gita", status: "soon" },
+  { name: "Mahabharata", status: "soon" },
+  { name: "Bhagavata Purana", status: "soon" },
+  { name: "Guru Granth Sahib", status: "soon" },
+  { name: "Dhammapada", status: "soon" },
+];
+
+function HolyBookChip({ book }: { book: HolyBook }) {
+  const isLive = book.status === "live";
+  return (
+    <div className="mx-2 inline-flex shrink-0 items-center gap-2.5 rounded-full border border-parchment-muted bg-parchment px-4 py-2 text-sm text-ink-soft shadow-[0_8px_30px_-16px_rgba(122,31,31,0.18)]">
+      <BookOpenText size={14} className="text-maroon/70" />
+      <span className="font-medium text-ink">{book.name}</span>
+      <span
+        className={cn(
+          "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em]",
+          isLive
+            ? "bg-maroon text-parchment"
+            : "border border-saffron/45 bg-saffron-50 text-maroon"
+        )}
+      >
+        {isLive && (
+          <span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-saffron" />
+        )}
+        {isLive ? "Live" : "Coming"}
+      </span>
+    </div>
+  );
+}
+
+function HolyBooksMarquee() {
+  // Render the list twice in a single track so the -50% translate at the
+  // end of the keyframe lands on a visually identical position — the
+  // viewer never sees the seam.
+  const track = [...HOLY_BOOKS, ...HOLY_BOOKS];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, delay: 0.7 }}
+      className="group relative mt-10 w-full max-w-5xl overflow-hidden"
+      role="region"
+      aria-label="Holy books in MysticAI — live and coming soon"
+    >
+      {/* Soft parchment fades on the marquee edges so chips melt in/out
+          instead of hard-clipping at the container boundary. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-parchment to-transparent"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-parchment to-transparent"
+      />
+
+      <div className="flex w-max animate-marquee py-1 group-hover:[animation-play-state:paused]">
+        {track.map((b, i) => (
+          <HolyBookChip key={`${b.name}-${i}`} book={b} />
+        ))}
+      </div>
+    </motion.div>
   );
 }
 

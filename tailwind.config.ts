@@ -116,6 +116,13 @@ const config: Config = {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        marquee: {
+          // Translates the inner track by exactly half its width. The track
+          // is rendered with the book list duplicated, so the swap is
+          // invisible — the second half is identical to the first.
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "aurora-pan": "aurora-pan 18s ease-in-out infinite",
@@ -125,6 +132,7 @@ const config: Config = {
         "spin-slower": "spin-slower 60s linear infinite",
         twinkle: "twinkle 3.5s ease-in-out infinite",
         "shimmer-text": "shimmer-text 6s linear infinite",
+        marquee: "marquee 42s linear infinite",
       },
     },
   },
