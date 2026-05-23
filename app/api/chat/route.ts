@@ -268,6 +268,72 @@ function verseBlock(v: Retrieved): string {
 }
 
 /* -------------------------------------------------------------------------
+ * GIBBERISH GATE — runs after crisis, before greeting.
+ *
+ * Keyboard-mashed input ("ghaisgdadjkfhsjdaf", "asdfasdfasdf") used to fall
+ * through into the emotional path and get answered with a forced Mode-B
+ * reply citing Bhagavad Gita 2.47. That made the AI look like it
+ * pattern-matches anything to "you seem overwhelmed" and quotes scripture at
+ * random — worse than no answer. We catch obvious non-messages here and
+ * respond politely without retrieval or LLM.
+ *
+ * Heuristics, per-word:
+ *   - has no vowel             → not real
+ *   - 5+ consonants in a row   → not real
+ *   - 4+ keyboard-row neighbors → not real (asdf, qwer, zxcv, hjkl…)
+ *   - 4+ same char in a row    → not real (aaaa, !!!!)
+ * If fewer than half the words look real, the whole message is gibberish.
+ *
+ * Any Devanagari in the message short-circuits to "not gibberish" — Hindi
+ * users typing in script should always fall through.
+ * ------------------------------------------------------------------------- */
+const KB_ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
+
+function hasKeyboardMash(word: string): boolean {
+  if (word.length < 4) return false;
+  for (const row of KB_ROWS) {
+    for (let i = 0; i <= word.length - 4; i++) {
+      let all = true;
+      for (let j = 0; j < 4; j++) {
+        if (!row.includes(word[i + j])) { all = false; break; }
+      }
+      if (all) return true;
+    }
+  }
+  return false;
+}
+
+function looksLikeRealWord(word: string): boolean {
+  if (word.length < 3) return true; // "i", "to", "is", "am" — trust short tokens
+  if (!/[aeiouy]/.test(word)) return false;
+  if (/[bcdfghjklmnpqrstvwxz]{5,}/.test(word)) return false;
+  if (/(.)\1{3,}/.test(word)) return false; // "aaaaa"
+  if (hasKeyboardMash(word)) return false;
+  return true;
+}
+
+function isGibberish(msg: string): boolean {
+  // Hindi / Devanagari — always trust.
+  if (/[ऀ-ॿ]/.test(msg)) return false;
+  const cleaned = msg.toLowerCase().replace(/[^a-z\s]/g, " ").trim();
+  if (!cleaned) return false;
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  if (!words.length) return false;
+  const realCount = words.filter(looksLikeRealWord).length;
+  return realCount < words.length * 0.5;
+}
+
+const GIBBERISH_BANK = [
+  "I didn't quite catch that, friend. Could you share what's on your mind in plain words? I'm here to listen, whatever you'd like to talk about.",
+  "That doesn't quite read like a message I can help with. If something is weighing on you, tell me in your own words and I'll meet you there.",
+  "I can't read that one, sorry. Tell me in a few simple words what you're going through, and I'll do my best to help.",
+];
+
+function pickGibberishFallback(): string {
+  return GIBBERISH_BANK[Math.floor(Math.random() * GIBBERISH_BANK.length)];
+}
+
+/* -------------------------------------------------------------------------
  * CRISIS DETECTION — runs BEFORE intent classification and BEFORE greetings.
  *
  * When a user expresses suicidal ideation, self-harm intent, or acute
@@ -651,6 +717,13 @@ export async function POST(req: NextRequest) {
   // an LLM-generated Gita answer. We bypass retrieval and the LLM entirely.
   if (isCrisis(message)) {
     return streamText(CRISIS_RESPONSE);
+  }
+
+  // GIBBERISH GATE — runs after crisis (so "kill myself asdf" still routes
+  // to crisis) and before greeting/intent (so "asdfasdf" never falls into
+  // the emotional path and gets a forced Bhagavad Gita verse attached).
+  if (isGibberish(message)) {
+    return streamText(pickGibberishFallback());
   }
 
   // Greeting / small talk → conversational welcome, no verse forced on them.
