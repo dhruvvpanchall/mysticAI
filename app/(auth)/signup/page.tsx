@@ -96,27 +96,26 @@ export default function SignupPage() {
         </AuthFooterLink>
       }
     >
-      <form onSubmit={onSubmit} className="space-y-3" noValidate>
-        {/* Row 1: Name + Email side-by-side, occupies the same vertical
-            space as login's email row. */}
-        <div className="grid grid-cols-2 gap-3">
-          <FormInput
-            label="Full name"
-            icon={<User size={17} />}
-            autoComplete="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <FormInput
-            label="Email"
-            type="email"
-            icon={<Mail size={17} />}
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-
+      <form onSubmit={onSubmit} className="space-y-2.5" noValidate>
+        {/* Three single-column rows — Name, Email, Password each get the
+            full width so labels and inputs read clearly. Vertical chrome
+            (gap, button margin, card padding) is tightened so the taller
+            form still fits without page scroll. */}
+        <FormInput
+          label="Full name"
+          icon={<User size={17} />}
+          autoComplete="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <FormInput
+          label="Email"
+          type="email"
+          icon={<Mail size={17} />}
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
         <FormInput
           label="Password"
           type="password"
@@ -188,7 +187,7 @@ export default function SignupPage() {
           type="submit"
           size="lg"
           variant="primary"
-          className="mt-4 w-full"
+          className="mt-3 w-full"
           loading={loading}
           leftIcon={<Sparkles size={17} />}
         >

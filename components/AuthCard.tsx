@@ -49,16 +49,16 @@ export function AuthCard({
           variants={stagger(0.2, 0.08)}
           initial="hidden"
           animate="show"
-          className="relative p-6 sm:p-10"
+          className="relative p-6 sm:p-8"
         >
           {/* Brand mark — sits inside a saffron halo */}
           <motion.div
             variants={fadeUp}
-            className="mb-6 flex items-center justify-center"
+            className="mb-4 flex items-center justify-center"
           >
             <div className="relative">
               <div className="absolute inset-0 animate-pulse-glow rounded-full bg-saffron/40 blur-2xl" />
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-saffron/50 bg-saffron-50">
+              <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-saffron/50 bg-saffron-50">
                 <BrandMark size="lg" bare />
               </div>
             </div>
@@ -83,20 +83,20 @@ export function AuthCard({
           {subtitle && (
             <motion.p
               variants={fadeUp}
-              className="mt-3 text-balance text-center text-sm text-ink-soft"
+              className="mt-2 text-balance text-center text-sm text-ink-soft"
             >
               {subtitle}
             </motion.p>
           )}
 
-          <motion.div variants={fadeUp} className="mt-8">
+          <motion.div variants={fadeUp} className="mt-6">
             {children}
           </motion.div>
 
           {footer && (
             <motion.div
               variants={fadeUp}
-              className="mt-6 text-center text-sm text-ink-muted"
+              className="mt-5 text-center text-sm text-ink-muted"
             >
               {footer}
             </motion.div>
@@ -113,7 +113,7 @@ export function AuthDivider({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="my-6 flex items-center gap-4">
+    <div className="my-5 flex items-center gap-4">
       <span className="h-px flex-1 bg-gradient-to-r from-transparent via-parchment-muted to-transparent" />
       <span className="text-[11px] uppercase tracking-[0.25em] text-ink-muted">
         {children}

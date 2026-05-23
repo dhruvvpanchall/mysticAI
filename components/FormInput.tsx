@@ -48,7 +48,7 @@ export const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
         <label
           htmlFor={id}
           className={cn(
-            "mb-1.5 block text-[11px] font-medium uppercase tracking-[0.16em] transition-colors duration-200",
+            "mb-1 block text-[11px] font-medium uppercase tracking-[0.16em] transition-colors duration-200",
             error
               ? "text-rose-700"
               : focused
@@ -109,7 +109,7 @@ export const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
             }}
             onChange={onChange}
             className={cn(
-              "peer w-full bg-transparent px-4 py-3.5 text-[15px] text-ink outline-none",
+              "peer w-full bg-transparent px-4 py-3 text-[15px] text-ink outline-none",
               "placeholder:text-ink-muted/55 selection:bg-saffron/30",
               icon && "pl-3",
               isPassword && showPasswordToggle && "pr-12",
