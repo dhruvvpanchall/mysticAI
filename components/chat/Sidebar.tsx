@@ -3,7 +3,16 @@
 import * as React from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { LogOut, Plus, MessageCircle, Trash2, X } from "lucide-react";
+import {
+  LogOut,
+  Plus,
+  MessageCircle,
+  Trash2,
+  X,
+  Pencil,
+  Check,
+  Settings,
+} from "lucide-react";
 import { BrandLockup } from "@/components/BrandMark";
 import { cn } from "@/lib/utils";
 
@@ -26,11 +35,165 @@ interface SidebarProps {
   onSelect: (id: string) => void;
   onNew: () => void;
   onDelete: (id: string) => void;
+  onRename: (id: string, title: string) => void;
   onLogout: () => void;
   /** Mobile drawer open state. Ignored on lg+. */
   open: boolean;
   /** Close handler for the mobile drawer. */
   onClose: () => void;
+}
+
+type RowMode = "normal" | "rename" | "confirm-delete";
+
+/**
+ * Single conversation row. Owns its own mode state (normal / rename /
+ * confirm-delete) so the parent stays a thin list. The active row gets
+ * a saffron highlight and the maroon icon; hover reveals rename + delete.
+ */
+function ConversationRow({
+  conversation,
+  active,
+  onSelect,
+  onRename,
+  onDelete,
+}: {
+  conversation: SidebarConversation;
+  active: boolean;
+  onSelect: () => void;
+  onRename: (title: string) => void;
+  onDelete: () => void;
+}) {
+  const [mode, setMode] = React.useState<RowMode>("normal");
+  const [draft, setDraft] = React.useState(conversation.title);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  // Snap the draft back to the current title whenever we leave rename mode,
+  // so the next pencil click starts from the latest server-side title.
+  React.useEffect(() => {
+    if (mode !== "rename") setDraft(conversation.title);
+  }, [mode, conversation.title]);
+
+  React.useEffect(() => {
+    if (mode === "rename") {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [mode]);
+
+  function commitRename() {
+    const next = draft.trim();
+    if (next && next !== conversation.title) onRename(next);
+    setMode("normal");
+  }
+
+  if (mode === "rename") {
+    return (
+      <div className="flex items-center gap-1 rounded-lg border border-saffron/40 bg-parchment px-2 py-1.5">
+        <Pencil size={13} className="shrink-0 text-maroon" />
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commitRename();
+            } else if (e.key === "Escape") {
+              e.preventDefault();
+              setMode("normal");
+            }
+          }}
+          onBlur={commitRename}
+          className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted/60"
+          maxLength={80}
+          aria-label="Conversation title"
+        />
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={commitRename}
+          aria-label="Save title"
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-saffron-50 hover:text-maroon"
+        >
+          <Check size={13} />
+        </button>
+      </div>
+    );
+  }
+
+  if (mode === "confirm-delete") {
+    return (
+      <div className="flex items-center gap-1 rounded-lg border border-rose-300 bg-rose-50 px-2 py-1.5">
+        <span className="min-w-0 flex-1 truncate text-[11px] text-rose-700">
+          Delete this conversation?
+        </span>
+        <button
+          onClick={() => setMode("normal")}
+          className="rounded-md px-2 py-1 text-[11px] text-ink-soft transition-colors hover:bg-parchment hover:text-ink"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => {
+            setMode("normal");
+            onDelete();
+          }}
+          className="rounded-md bg-rose-600 px-2 py-1 text-[11px] font-medium text-parchment transition-colors hover:bg-rose-700"
+        >
+          Delete
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "group relative flex items-center rounded-lg transition-colors",
+        active
+          ? "border border-saffron/40 bg-saffron-50"
+          : "border border-transparent hover:bg-parchment"
+      )}
+    >
+      <button
+        onClick={onSelect}
+        className={cn(
+          "flex min-w-0 flex-1 items-center gap-2 px-3 py-2 text-left text-sm transition-colors",
+          active ? "text-ink" : "text-ink-soft hover:text-ink"
+        )}
+      >
+        <MessageCircle
+          size={14}
+          className={cn(
+            "shrink-0",
+            active ? "text-maroon" : "text-ink-muted"
+          )}
+        />
+        <span className="truncate">{conversation.title}</span>
+      </button>
+      <div className="mr-1 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setMode("rename");
+          }}
+          aria-label={`Rename ${conversation.title}`}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-saffron-50 hover:text-maroon"
+        >
+          <Pencil size={13} />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setMode("confirm-delete");
+          }}
+          aria-label={`Delete ${conversation.title}`}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-rose-100 hover:text-rose-600"
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -45,6 +208,7 @@ export function Sidebar({
   onSelect,
   onNew,
   onDelete,
+  onRename,
   onLogout,
   open,
   onClose,
@@ -102,48 +266,17 @@ export function Sidebar({
             </p>
           ) : (
             <ul className="space-y-1">
-              {conversations.map((c) => {
-                const active = c.id === activeId;
-                return (
-                  <li key={c.id}>
-                    <div
-                      className={cn(
-                        "group relative flex items-center rounded-lg transition-colors",
-                        active
-                          ? "border border-saffron/40 bg-saffron-50"
-                          : "border border-transparent hover:bg-parchment"
-                      )}
-                    >
-                      <button
-                        onClick={() => onSelect(c.id)}
-                        className={cn(
-                          "flex min-w-0 flex-1 items-center gap-2 px-3 py-2 text-left text-sm transition-colors",
-                          active ? "text-ink" : "text-ink-soft hover:text-ink"
-                        )}
-                      >
-                        <MessageCircle
-                          size={14}
-                          className={cn(
-                            "shrink-0",
-                            active ? "text-maroon" : "text-ink-muted"
-                          )}
-                        />
-                        <span className="truncate">{c.title}</span>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(c.id);
-                        }}
-                        aria-label={`Delete ${c.title}`}
-                        className="mr-1.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-ink-muted opacity-0 transition-opacity hover:bg-rose-100 hover:text-rose-600 group-hover:opacity-100 group-focus-within:opacity-100"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
+              {conversations.map((c) => (
+                <li key={c.id}>
+                  <ConversationRow
+                    conversation={c}
+                    active={c.id === activeId}
+                    onSelect={() => onSelect(c.id)}
+                    onRename={(title) => onRename(c.id, title)}
+                    onDelete={() => onDelete(c.id)}
+                  />
+                </li>
+              ))}
             </ul>
           )}
         </div>
@@ -173,6 +306,13 @@ export function Sidebar({
                 {user.email}
               </p>
             </div>
+            <Link
+              href="/settings"
+              aria-label="Settings"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-parchment-muted bg-parchment text-ink-soft transition-colors hover:border-maroon/40 hover:text-maroon"
+            >
+              <Settings size={14} />
+            </Link>
             <button
               onClick={onLogout}
               aria-label="Sign out"

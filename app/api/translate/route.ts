@@ -3,6 +3,12 @@ import { createHash } from "node:crypto";
 import OpenAI from "openai";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { getFirebaseDb, isFirebaseConfigured } from "@/lib/firebase";
+import {
+  TRANSLATE_LIMIT,
+  clientKey,
+  takeToken,
+  tooManyRequests,
+} from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -189,6 +195,9 @@ OUTPUT:
 }
 
 export async function POST(req: NextRequest) {
+  const gate = takeToken(`translate:${clientKey(req)}`, TRANSLATE_LIMIT);
+  if (!gate.ok) return tooManyRequests(gate.retryAfterSec);
+
   let text = "";
   let lang = "";
   try {

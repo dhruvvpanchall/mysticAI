@@ -436,6 +436,19 @@ export default function ChatPage() {
     }
   }
 
+  function renameConversation(id: string, title: string) {
+    const clean = title.trim().slice(0, 80);
+    if (!clean) return;
+    setConversations((cs) =>
+      cs.map((c) => (c.id === id ? { ...c, title: clean } : c))
+    );
+    if (user && !id.startsWith("local-")) {
+      fsUpdateConversation(user.id, id, { title: clean }).catch((err) =>
+        console.error("[chat] renameConversation failed:", err)
+      );
+    }
+  }
+
   async function send(text: string) {
     const content = text.trim();
     if (!content || streaming || !user) return;
@@ -711,6 +724,7 @@ export default function ChatPage() {
           startNewConversation();
         }}
         onDelete={deleteConversation}
+        onRename={renameConversation}
         onLogout={async () => {
           await logout();
           router.replace("/login");

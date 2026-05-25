@@ -3,8 +3,12 @@
 import * as React from "react";
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
+  EmailAuthProvider,
   GoogleAuthProvider,
   onAuthStateChanged,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
@@ -16,6 +20,7 @@ import {
   googleProvider,
   isFirebaseConfigured,
 } from "@/lib/firebase";
+import { deleteAllUserData } from "@/lib/conversations";
 
 /**
  * Real auth via Firebase. The exposed API surface (useAuth → user, loading,
@@ -42,6 +47,15 @@ interface AuthContextValue {
   signup: (name: string, email: string, password: string) => Promise<void>;
   googleLogin: () => Promise<void>;
   logout: () => Promise<void>;
+  /** Update the seeker's display name in Firebase Auth. */
+  updateName: (name: string) => Promise<void>;
+  /**
+   * Wipe Firestore data and the Firebase Auth user. For email/password
+   * accounts, pass `password` so we can re-auth if Firebase requires it
+   * (recent-login policy). For Google accounts, leave it empty — we'll
+   * re-auth via a Google popup automatically.
+   */
+  deleteAccount: (opts?: { password?: string }) => Promise<void>;
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null);
@@ -178,9 +192,91 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateName = React.useCallback(async (name: string) => {
+    const auth = getFirebaseAuth();
+    const fb = auth.currentUser;
+    if (!fb) throw new Error("Not signed in.");
+    const trimmed = name.trim();
+    if (!trimmed) throw new Error("Name cannot be empty.");
+    try {
+      await updateProfile(fb, { displayName: trimmed });
+      setUser({
+        id: fb.uid,
+        name: trimmed,
+        email: fb.email ?? "",
+      });
+    } catch (err) {
+      throw new Error(friendlyError(err));
+    }
+  }, []);
+
+  const deleteAccount = React.useCallback(
+    async (opts?: { password?: string }) => {
+      const auth = getFirebaseAuth();
+      const fb = auth.currentUser;
+      if (!fb) throw new Error("Not signed in.");
+
+      // Identify the sign-in method so we know how to reauth on the
+      // requires-recent-login branch. providerData is empty for anonymous
+      // users only — both google.com and password populate at least one.
+      const providerId = fb.providerData[0]?.providerId ?? "password";
+
+      // Inner: wipe data, then delete the auth user. Order matters: once
+      // the auth identity is gone, security rules deny further writes, so
+      // Firestore data must go first.
+      const purge = async () => {
+        await deleteAllUserData(fb.uid);
+        await deleteUser(fb);
+      };
+
+      try {
+        await purge();
+      } catch (err) {
+        const code =
+          typeof err === "object" && err && "code" in err
+            ? String((err as { code: unknown }).code)
+            : "";
+        if (code !== "auth/requires-recent-login") {
+          throw new Error(friendlyError(err));
+        }
+        // Recent-login required — reauth then retry the purge.
+        try {
+          if (providerId === "google.com") {
+            await reauthenticateWithPopup(fb, googleProvider);
+          } else {
+            if (!opts?.password) {
+              throw new Error(
+                "Please enter your password to confirm account deletion."
+              );
+            }
+            if (!fb.email) {
+              throw new Error("This account has no email on file.");
+            }
+            const cred = EmailAuthProvider.credential(fb.email, opts.password);
+            await reauthenticateWithCredential(fb, cred);
+          }
+        } catch (reauthErr) {
+          throw new Error(friendlyError(reauthErr));
+        }
+        await purge();
+      }
+      setUser(null);
+    },
+    []
+  );
+
   const value = React.useMemo(
-    () => ({ user, loading, login, signup, googleLogin, logout }),
-    [user, loading, login, signup, googleLogin, logout]
+    () => ({
+      user,
+      loading,
+      login,
+      signup,
+      googleLogin,
+      logout,
+      updateName,
+      deleteAccount,
+    }),
+    [user, loading, login, signup, googleLogin, logout, updateName, deleteAccount]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

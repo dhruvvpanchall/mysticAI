@@ -158,6 +158,27 @@ export async function deleteConversation(
   await batch.commit();
 }
 
+/**
+ * Wipe every conversation + message for the user. Called from the
+ * delete-account flow BEFORE deleting the Firebase Auth user — once the
+ * auth identity is gone, the user no longer has permission to clean up
+ * their own data and it would orphan in Firestore.
+ *
+ * Firestore batches cap at 500 ops; we chunk through the convo list and
+ * issue a fresh batch per conversation. Each conversation contributes
+ * (messages + 1) deletes, well under the cap for normal usage.
+ */
+export async function deleteAllUserData(uid: string): Promise<void> {
+  const convoSnap = await getDocs(convosCol(uid));
+  for (const c of convoSnap.docs) {
+    const msgSnap = await getDocs(messagesCol(uid, c.id));
+    const batch = writeBatch(getFirebaseDb());
+    for (const m of msgSnap.docs) batch.delete(m.ref);
+    batch.delete(c.ref);
+    await batch.commit();
+  }
+}
+
 /** Append a message. Caller supplies the id (so optimistic UI matches). */
 export async function appendMessage(
   uid: string,

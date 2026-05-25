@@ -1,6 +1,12 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import { retrieveVerses, type Retrieved } from "@/lib/gita";
+import {
+  CHAT_LIMIT,
+  clientKey,
+  takeToken,
+  tooManyRequests,
+} from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -688,6 +694,12 @@ interface ChatTurn {
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limit FIRST, before parsing the body or doing any work. A bad
+  // actor banging this endpoint shouldn't get to spend our JSON parser
+  // cycles either.
+  const gate = takeToken(`chat:${clientKey(req)}`, CHAT_LIMIT);
+  if (!gate.ok) return tooManyRequests(gate.retryAfterSec);
+
   let message = "";
   let history: ChatTurn[] = [];
   try {
