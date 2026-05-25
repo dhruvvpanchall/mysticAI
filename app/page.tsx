@@ -32,12 +32,105 @@ import { BrandLockup, BrandMark } from "@/components/BrandMark";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
-/*  Hero                                                               */
+/*  Hero — headline + live chat demo merged into one section.          */
+/*  Lovable.dev-style: the chat preview is the centerpiece, with        */
+/*  tabbed sample situations the visitor can switch between.            */
 /* ------------------------------------------------------------------ */
 
+interface HeroSample {
+  label: string;
+  question: string;
+  leadInBold: string;
+  leadInRest: string;
+  verse: {
+    ref: string;
+    translation: string;
+    transliteration: string;
+  };
+  closingBold: string;
+  closingRest: string;
+}
+
+const HERO_SAMPLES: HeroSample[] = [
+  {
+    label: "Work stress",
+    question:
+      "I'm overwhelmed and stressed about work. I keep worrying about whether my effort will pay off.",
+    leadInBold: "The Gita speaks directly to this.",
+    leadInRest:
+      " Krishna teaches that your power lies in the action itself, not in its outcome:",
+    verse: {
+      ref: "Bhagavad Gita 2.47",
+      translation:
+        "You have the right to perform your duty, but never to the results of your actions.",
+      transliteration: "karmaṇy-evādhikāras te mā phaleṣhu kadāchana",
+    },
+    closingBold: "Brought into your situation:",
+    closingRest:
+      " pour yourself into the work that is yours to do, and release the anxiety of results you cannot control. The worry softens when effort and outcome stop being tangled together.",
+  },
+  {
+    label: "Racing mind",
+    question:
+      "My mind never stops racing. Every quiet moment fills with worry.",
+    leadInBold: "Krishna names this exactly.",
+    leadInRest:
+      " He met Arjuna with the same restless mind on the battlefield:",
+    verse: {
+      ref: "Bhagavad Gita 6.34",
+      translation:
+        "The mind is indeed restless, turbulent, strong, and unyielding, O Krishna; I consider it as difficult to control as the wind.",
+      transliteration: "chañchalaṁ hi manaḥ kṛiṣhṇa pramāthi balavad dṛiḍham",
+    },
+    closingBold: "What this means for you:",
+    closingRest:
+      " naming the storm is already a softening. Krishna does not promise an empty mind, he promises a steadier one, built by patient practice, not force.",
+  },
+  {
+    label: "Loss & grief",
+    question:
+      "I lost someone I love. How do I carry this grief?",
+    leadInBold: "The Gita does not rush you past this.",
+    leadInRest:
+      " It sits beside the impermanence of feeling itself:",
+    verse: {
+      ref: "Bhagavad Gita 2.14",
+      translation:
+        "Contact of the senses with objects gives rise to feelings of heat and cold, pleasure and pain. They come and go and are impermanent. Endure them.",
+      transliteration: "mātrā-sparśhās tu kaunteya śhītoṣhṇa-sukha-duḥkha-dāḥ",
+    },
+    closingBold: "Carried into your loss:",
+    closingRest:
+      " the grief is real, and not the whole of you. It comes in waves, and it passes through. You do not need to brace against every wave to survive it.",
+  },
+];
+
 function Hero() {
+  const [activeIdx, setActiveIdx] = React.useState(0);
+  // "typing" → typing dots visible. "showing" → assistant content revealed.
+  // Resets on every tab change so each new sample plays its own little reveal.
+  const [phase, setPhase] = React.useState<"typing" | "showing">("typing");
+
+  React.useEffect(() => {
+    setPhase("typing");
+    const t = setTimeout(() => setPhase("showing"), 850);
+    return () => clearTimeout(t);
+  }, [activeIdx]);
+
+  const sample = HERO_SAMPLES[activeIdx];
+
+  // Per-child fade-up with explicit delays. Tried variants/staggerChildren
+  // earlier and it didn't fire reliably when the inner motion.div mounted
+  // inside the already-mounted outer wrapper on tab change — going direct
+  // with initial/animate/transition is the bulletproof path.
+  const fadeUp = (delay: number) => ({
+    initial: { opacity: 0, y: 8 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.35, delay },
+  });
+
   return (
-    <section className="relative mx-auto flex max-w-6xl flex-col items-center px-5 pb-16 pt-32 text-center sm:px-6 sm:pb-24 sm:pt-44">
+    <section className="relative mx-auto flex max-w-6xl flex-col items-center px-5 pb-20 pt-28 text-center sm:px-6 sm:pb-28 sm:pt-36">
       {/* Soft saffron halo behind the hero text */}
       <div
         aria-hidden
@@ -57,7 +150,7 @@ function Hero() {
         initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
         transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-        className="mt-6 max-w-4xl text-balance font-display text-[40px] leading-[1.05] tracking-tight text-ink sm:mt-7 sm:text-6xl md:text-[76px]"
+        className="mt-6 max-w-4xl text-balance font-display text-[40px] leading-[1.05] tracking-tight text-ink sm:mt-7 sm:text-6xl md:text-[72px]"
       >
         When life feels heavy,{" "}
         <span className="relative inline-block text-maroon">
@@ -73,44 +166,210 @@ function Hero() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.25 }}
-        className="mt-7 max-w-2xl text-balance text-base text-ink-soft sm:text-lg"
+        className="mt-6 max-w-2xl text-balance text-base text-ink-soft sm:text-lg"
       >
-        MysticAI answers real situations like overthinking, heartbreak, and
-        fear of the future, with verses you can verify, in words that sound
-        like someone who has actually read the text.
+        See a real situation, watch a grounded reply unfold, with a verse you
+        can verify. Then bring your own question.
       </motion.p>
 
+      {/* ────────── Live chat demo card ────────── */}
       <motion.div
-        initial={{ opacity: 0, y: 18 }}
+        initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.4 }}
-        className="mt-9 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center"
+        transition={{ duration: 0.9, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+        className="mt-10 w-full max-w-4xl text-left sm:mt-12"
       >
-        <Link href="/signup" className="w-full sm:w-auto">
-          <GlowingButton
-            size="lg"
-            variant="primary"
-            rightIcon={<ArrowRight size={18} />}
-            className="w-full sm:w-auto"
-          >
-            Start asking for free
-          </GlowingButton>
-        </Link>
-        <Link href="#wisdom" className="w-full sm:w-auto">
-          <GlowingButton
-            size="lg"
-            variant="outline"
-            className="w-full sm:w-auto"
-          >
-            See real answers
-          </GlowingButton>
-        </Link>
+        <div className="relative overflow-hidden rounded-3xl border border-parchment-muted bg-parchment shadow-[0_30px_80px_-30px_rgba(122,31,31,0.25)]">
+          {/* Browser chrome — traffic lights, live pill, sample tabs */}
+          <div className="border-b border-parchment-muted bg-parchment-deep px-4 py-3 sm:px-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-rose-300" />
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              </div>
+              <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-ink-muted sm:inline">
+                mysticai · /chat
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-700">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                </span>
+                Live
+              </span>
+            </div>
+
+            {/* Sample-question tabs — clicking re-plays the demo with new content. */}
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <span className="hidden text-[10px] uppercase tracking-[0.2em] text-ink-muted sm:inline">
+                Try a sample:
+              </span>
+              {HERO_SAMPLES.map((s, i) => {
+                const active = i === activeIdx;
+                return (
+                  <button
+                    key={s.label}
+                    onClick={() => setActiveIdx(i)}
+                    className={cn(
+                      "rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
+                      active
+                        ? "bg-maroon text-parchment shadow-[0_6px_14px_-6px_rgba(122,31,31,0.5)]"
+                        : "border border-parchment-muted bg-parchment text-ink-soft hover:border-maroon/30 hover:text-ink"
+                    )}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Chat body — each piece animates independently. Re-mount on tab
+              change is forced via `key={...activeIdx}` per motion element. */}
+          <div className="space-y-5 bg-parchment p-5 sm:p-9">
+            {/* User bubble */}
+            <motion.div
+              key={`q-${activeIdx}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex justify-end"
+            >
+              <div className="max-w-[88%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md border border-parchment-muted bg-parchment-deep px-4 py-3 text-[15px] text-ink sm:max-w-[80%]">
+                {sample.question}
+              </div>
+            </motion.div>
+
+            {/* Assistant row */}
+            <div className="flex gap-3">
+              <span className="relative mt-0.5 shrink-0">
+                {phase === "typing" && (
+                  <motion.span
+                    aria-hidden
+                    initial={{ scale: 1, opacity: 0.55 }}
+                    animate={{ scale: 1.25, opacity: 0 }}
+                    transition={{
+                      duration: 1.6,
+                      repeat: Infinity,
+                      ease: "easeOut",
+                    }}
+                    className="pointer-events-none absolute inset-0 rounded-xl border border-maroon/50"
+                  />
+                )}
+                <BrandMark size="md" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <AnimatePresence mode="wait">
+                  {phase === "typing" ? (
+                    <motion.div
+                      key={`dots-${activeIdx}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex items-center gap-1.5 py-3"
+                    >
+                      {[0, 1, 2].map((i) => (
+                        <span
+                          key={i}
+                          className="h-2 w-2 animate-twinkle rounded-full bg-maroon/70"
+                          style={{ animationDelay: `${i * 0.18}s` }}
+                        />
+                      ))}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key={`body-${activeIdx}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-4"
+                    >
+                      <motion.p
+                        {...fadeUp(0.05)}
+                        className="text-[15px] leading-relaxed text-ink-soft"
+                      >
+                        <strong className="font-semibold text-ink">
+                          {sample.leadInBold}
+                        </strong>
+                        {sample.leadInRest}
+                      </motion.p>
+
+                      <motion.div {...fadeUp(0.2)} className="relative">
+                        <div
+                          aria-hidden
+                          className="absolute -inset-px rounded-2xl bg-gradient-to-br from-saffron/40 via-saffron/10 to-transparent opacity-70 blur-md"
+                        />
+                        <div className="relative rounded-2xl border border-saffron/40 bg-saffron-50 p-4 sm:p-5">
+                          <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-md bg-maroon/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-maroon">
+                            <Quote size={11} /> {sample.verse.ref}
+                          </div>
+                          <p className="font-display text-lg leading-snug text-ink sm:text-xl">
+                            &ldquo;{sample.verse.translation}&rdquo;
+                          </p>
+                          <p className="mt-2 text-xs italic text-ink-muted">
+                            {sample.verse.transliteration}
+                          </p>
+                        </div>
+                      </motion.div>
+
+                      <motion.p
+                        {...fadeUp(0.35)}
+                        className="text-[15px] leading-relaxed text-ink-soft"
+                      >
+                        <strong className="font-semibold text-ink">
+                          {sample.closingBold}
+                        </strong>
+                        {sample.closingRest}
+                      </motion.p>
+
+                      <motion.div
+                        {...fadeUp(0.5)}
+                        className="flex flex-wrap gap-2 pt-1"
+                      >
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-50 px-3 py-1 text-[11px] text-emerald-700">
+                          <ShieldCheck size={12} />
+                          Verified verse
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-parchment-muted bg-parchment px-3 py-1 text-[11px] text-ink-muted">
+                          <BookOpenText size={12} className="text-maroon" />
+                          Tap to read the full shloka
+                        </span>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+
+          {/* Card footer — the in-card CTA. */}
+          <div className="border-t border-parchment-muted bg-parchment-deep px-5 py-5 sm:px-9">
+            <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+              <p className="text-[13px] leading-snug text-ink-soft sm:text-sm">
+                Now bring your own question. Free to start, no setup.
+              </p>
+              <Link
+                href="/signup"
+                className="group inline-flex items-center justify-center gap-1.5 rounded-xl bg-maroon px-4 py-2.5 text-sm font-medium text-parchment shadow-[0_10px_24px_-8px_rgba(122,31,31,0.55)] transition-all hover:bg-maroon-deep"
+              >
+                Try MysticAI free
+                <ArrowRight
+                  size={15}
+                  className="transition-transform group-hover:translate-x-0.5"
+                />
+              </Link>
+            </div>
+          </div>
+        </div>
       </motion.div>
 
+      {/* Trust badges */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 0.55 }}
+        transition={{ duration: 0.8, delay: 0.6 }}
         className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-ink-muted"
       >
         <span className="inline-flex items-center gap-1.5">
@@ -124,9 +383,7 @@ function Hero() {
         </span>
       </motion.div>
 
-      {/* Holy-books marquee — what MysticAI covers today and what's
-          on the way. The seeker reads the scrolling pills and gets an
-          honest snapshot of the corpus (one LIVE source, several queued). */}
+      {/* Holy-books marquee — what MysticAI covers today and what's on the way. */}
       <HolyBooksMarquee />
     </section>
   );
@@ -298,131 +555,6 @@ function Topics() {
           </Reveal>
         ))}
       </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Sample answer — the product "aha"                                  */
-/* ------------------------------------------------------------------ */
-
-function SampleAnswer() {
-  return (
-    <section className="cv-auto relative mx-auto max-w-4xl px-5 pb-20 sm:px-6 sm:pb-28">
-      <Reveal className="mx-auto max-w-2xl text-center">
-        <SectionEyebrow>A real answer, live</SectionEyebrow>
-        <SectionTitle>
-          See how MysticAI <span className="text-maroon">responds</span>
-        </SectionTitle>
-        <SectionSubtitle>
-          One real situation, one grounded reply, one verse you can verify.
-        </SectionSubtitle>
-      </Reveal>
-
-      <Reveal className="mt-12 sm:mt-14">
-        <div className="relative overflow-hidden rounded-3xl border border-parchment-muted bg-parchment shadow-[0_30px_80px_-30px_rgba(122,31,31,0.25)]">
-          {/* Browser chrome */}
-          <div className="flex items-center justify-between border-b border-parchment-muted bg-parchment-deep px-4 py-3 sm:px-5">
-            <div className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-rose-300" />
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-            </div>
-            <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-ink-muted sm:inline">
-              mysticai · /chat
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-700">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              </span>
-              Live
-            </span>
-          </div>
-
-          <div className="space-y-5 bg-parchment p-5 sm:p-9">
-            <div className="flex justify-end">
-              <div className="max-w-[88%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md border border-parchment-muted bg-parchment-deep px-4 py-3 text-[15px] text-ink sm:max-w-[80%]">
-                I&rsquo;m overwhelmed and stressed about work. I keep worrying
-                about whether my effort will pay off.
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-saffron/40 bg-saffron-50">
-                <span className="font-display text-base text-maroon">ॐ</span>
-              </span>
-              <div className="min-w-0 flex-1 space-y-4">
-                <p className="text-[15px] leading-relaxed text-ink-soft">
-                  <strong className="font-semibold text-ink">
-                    The Gita speaks directly to this.
-                  </strong>{" "}
-                  Krishna teaches that your power lies in the action itself,
-                  not in its outcome:
-                </p>
-
-                <div className="relative">
-                  <div
-                    aria-hidden
-                    className="absolute -inset-px rounded-2xl bg-gradient-to-br from-saffron/40 via-saffron/10 to-transparent opacity-70 blur-md"
-                  />
-                  <div className="relative rounded-2xl border border-saffron/40 bg-saffron-50 p-4 sm:p-5">
-                    <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-md bg-maroon/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-maroon">
-                      <Quote size={11} /> Bhagavad Gita 2.47
-                    </div>
-                    <p className="font-display text-lg leading-snug text-ink sm:text-xl">
-                      &ldquo;You have the right to perform your duty, but never
-                      to the results of your actions.&rdquo;
-                    </p>
-                    <p className="mt-2 text-xs italic text-ink-muted">
-                      karmaṇy-evādhikāras te mā phaleṣhu kadāchana
-                    </p>
-                  </div>
-                </div>
-
-                <p className="text-[15px] leading-relaxed text-ink-soft">
-                  <strong className="font-semibold text-ink">
-                    Brought into your situation:
-                  </strong>{" "}
-                  pour yourself into the work that is yours to do, and release
-                  the anxiety of results you cannot control. The worry softens
-                  when effort and outcome stop being tangled together.
-                </p>
-
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-50 px-3 py-1 text-[11px] text-emerald-700">
-                    <ShieldCheck size={12} />
-                    Verified verse
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-parchment-muted bg-parchment px-3 py-1 text-[11px] text-ink-muted">
-                    <BookOpenText size={12} className="text-maroon" />
-                    Tap to read the full shloka
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer CTA inside card */}
-          <div className="border-t border-parchment-muted bg-parchment-deep px-5 py-5 sm:px-9">
-            <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
-              <p className="text-[13px] leading-snug text-ink-soft sm:text-sm">
-                Now bring your own question. Free to start, no setup.
-              </p>
-              <Link
-                href="/signup"
-                className="group inline-flex items-center justify-center gap-1.5 rounded-xl bg-maroon px-4 py-2.5 text-sm font-medium text-parchment shadow-[0_10px_24px_-8px_rgba(122,31,31,0.55)] transition-all hover:bg-maroon-deep"
-              >
-                Try MysticAI free
-                <ArrowRight
-                  size={15}
-                  className="transition-transform group-hover:translate-x-0.5"
-                />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </Reveal>
     </section>
   );
 }
@@ -1022,7 +1154,6 @@ export default function HomePage() {
       <main className="relative">
         <Hero />
         <Topics />
-        <SampleAnswer />
         <WisdomShowcase />
         <HowItWorks />
         <Testimonials />
