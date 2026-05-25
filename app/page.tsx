@@ -405,7 +405,7 @@ interface HolyBook {
 // Buddhist neighbors. Swap freely — order = marquee order.
 const HOLY_BOOKS: HolyBook[] = [
   { name: "Bhagavad Gita", status: "live" },
-  { name: "Ramayana", status: "soon" },
+  { name: "Ramayana", status: "live" },
   { name: "Upanishads", status: "soon" },
   { name: "Yoga Sutras", status: "soon" },
   { name: "Hanuman Chalisa", status: "soon" },
