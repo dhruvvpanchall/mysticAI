@@ -35,8 +35,14 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
+import {
+  DEFAULT_SCRIPTURE,
+  resolveScriptureId,
+  type ScriptureId,
+} from "@/lib/scriptures";
 
 export type Lang = "en" | "hi";
+export type { ScriptureId };
 
 export interface StoredMessage {
   id: string;
@@ -49,6 +55,10 @@ export interface StoredMessage {
 export interface StoredConversation {
   id: string;
   title: string;
+  /** Which scripture this conversation is grounded in. Legacy docs without
+   *  the field default to the default scripture (Gita) so old conversations
+   *  keep working unchanged. */
+  model: ScriptureId;
   createdAt: number;
   updatedAt: number;
   messages: StoredMessage[];
@@ -110,6 +120,7 @@ export async function listConversations(
     out.push({
       id: c.id,
       title: String(cData.title ?? "New conversation"),
+      model: resolveScriptureId(cData.model),
       createdAt: tsToNumber(cData.createdAt),
       updatedAt: tsToNumber(cData.updatedAt),
       messages,
@@ -123,10 +134,12 @@ export async function listConversations(
 /** Create a blank conversation. Returns the generated id. */
 export async function createConversation(
   uid: string,
-  title: string
+  title: string,
+  model: ScriptureId = DEFAULT_SCRIPTURE
 ): Promise<string> {
   const ref = await addDoc(convosCol(uid), {
     title,
+    model,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });

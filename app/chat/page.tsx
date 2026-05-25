@@ -12,6 +12,7 @@ import {
   Menu,
 } from "lucide-react";
 import { Sidebar, type SidebarConversation } from "@/components/chat/Sidebar";
+import { ModelDropdown } from "@/components/chat/ModelDropdown";
 import { BrandLockup, BrandMark } from "@/components/BrandMark";
 import { useAuth } from "@/lib/auth";
 import {
@@ -23,6 +24,12 @@ import {
   setMessageTranslation as fsSetMessageTranslation,
   updateConversation as fsUpdateConversation,
 } from "@/lib/conversations";
+import {
+  DEFAULT_SCRIPTURE,
+  getScripture,
+  resolveScriptureId,
+  type ScriptureId,
+} from "@/lib/scriptures";
 import { cn } from "@/lib/utils";
 
 /**
@@ -66,6 +73,10 @@ interface Message {
 interface Conversation {
   id: string;
   title: string;
+  /** Which scripture this conversation was started in — never changes after
+   *  creation, so the seeker can't accidentally blend Gita and Ramayana
+   *  context within a single thread. */
+  model: ScriptureId;
   messages: Message[];
   createdAt: number;
   updatedAt: number;
@@ -75,18 +86,30 @@ const LANG_LABEL: Record<Exclude<Lang, "en">, string> = {
   hi: "हिंदी",
 };
 
-const STARTERS = [
-  "I'm overwhelmed and stressed about work.",
-  "How do I deal with anger I can't control?",
-  "I lost someone I love. How do I carry this grief?",
-  "My mind never stops racing. How do I find stillness?",
-];
+/** Per-scripture conversation starters. The empty-state suggestions on the
+ *  chat home swap with the active model so they feel native to whatever
+ *  the seeker is about to ask. */
+const STARTERS: Record<ScriptureId, string[]> = {
+  gita: [
+    "I'm overwhelmed and stressed about work.",
+    "How do I deal with anger I can't control?",
+    "I lost someone I love. How do I carry this grief?",
+    "My mind never stops racing. How do I find stillness?",
+  ],
+  ramayana: [
+    "I have to choose between what's right and what I want.",
+    "Someone I love is far away. How do I carry the longing?",
+    "I'm being asked to give up something I've waited for.",
+    "I'm afraid I'm not strong enough for what's in front of me.",
+  ],
+};
 
-// Only the "which conversation is active" is local — that's pure UI state
-// and there's no reason to send it to Firestore. Everything else (messages,
-// titles, translations) lives in Firestore so it follows the seeker across
-// browsers and devices.
+// Only the "which conversation is active" and the active scripture are
+// local — that's pure UI state and there's no reason to send it to
+// Firestore. Everything else (messages, titles, translations) lives in
+// Firestore so it follows the seeker across browsers and devices.
 const ACTIVE_KEY = (uid: string) => `mystic:active:${uid}`;
+const MODEL_KEY = (uid: string) => `mystic:model:${uid}`;
 
 function titleFromMessage(text: string): string {
   const cleaned = text.replace(/\s+/g, " ").trim();
@@ -239,6 +262,7 @@ export default function ChatPage() {
 
   const [conversations, setConversations] = React.useState<Conversation[]>([]);
   const [activeId, setActiveId] = React.useState<string | null>(null);
+  const [model, setModel] = React.useState<ScriptureId>(DEFAULT_SCRIPTURE);
   const [input, setInput] = React.useState("");
   const [streaming, setStreaming] = React.useState(false);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
@@ -269,6 +293,7 @@ export default function ChatPage() {
         const convs: Conversation[] = fromDb.map((c) => ({
           id: c.id,
           title: c.title,
+          model: c.model,
           createdAt: c.createdAt,
           updatedAt: c.updatedAt,
           messages: c.messages.map((m) => {
@@ -310,9 +335,20 @@ export default function ChatPage() {
           }),
         }));
         setConversations(convs);
+        // Hydrate the active scripture first, then pick an active
+        // conversation that belongs to it. Keeps a model-switch persistent
+        // across refresh and prevents the active thread from belonging to
+        // the wrong scripture on first paint.
+        const savedModel = resolveScriptureId(
+          localStorage.getItem(MODEL_KEY(user.id))
+        );
+        setModel(savedModel);
         const savedActive = localStorage.getItem(ACTIVE_KEY(user.id));
-        const stillExists = convs.find((c) => c.id === savedActive);
-        setActiveId(stillExists ? savedActive : convs[0]?.id ?? null);
+        const stillExists = convs.find(
+          (c) => c.id === savedActive && c.model === savedModel
+        );
+        const fallback = convs.find((c) => c.model === savedModel);
+        setActiveId(stillExists ? savedActive : fallback?.id ?? null);
       } catch (err) {
         console.error("[chat] failed to load conversations:", err);
       } finally {
@@ -331,6 +367,13 @@ export default function ChatPage() {
     if (activeId) localStorage.setItem(ACTIVE_KEY(user.id), activeId);
     else localStorage.removeItem(ACTIVE_KEY(user.id));
   }, [user, hydrated, activeId]);
+
+  // Persist the active scripture per user, so a refresh lands the seeker
+  // in the same model they were in.
+  React.useEffect(() => {
+    if (!user || !hydrated) return;
+    localStorage.setItem(MODEL_KEY(user.id), model);
+  }, [user, hydrated, model]);
 
   const activeConv = React.useMemo(
     () => conversations.find((c) => c.id === activeId) ?? null,
@@ -388,9 +431,19 @@ export default function ChatPage() {
   /** Create a blank conversation locally + in Firestore. The temp local
    *  id is replaced with the Firestore-generated id once the write resolves.
    *  We do NOT block on the network — UI updates immediately and Firestore
-   *  catches up. */
+   *  catches up. New conversations carry the active scripture so the chat
+   *  thread stays in one tradition for its whole life.
+   *
+   *  Reuses an empty conversation already started in the SAME scripture
+   *  (so spamming "New conversation" twice in Gita doesn't spawn dupes);
+   *  starts a fresh one when the active conversation belongs to a
+   *  different scripture, since context must not blend across models. */
   function startNewConversation(): Conversation {
-    if (activeConv && activeConv.messages.length === 0) {
+    if (
+      activeConv &&
+      activeConv.model === model &&
+      activeConv.messages.length === 0
+    ) {
       setSidebarOpen(false);
       return activeConv;
     }
@@ -398,6 +451,7 @@ export default function ChatPage() {
     const conv: Conversation = {
       id: tempId,
       title: "New conversation",
+      model,
       messages: [],
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -405,7 +459,7 @@ export default function ChatPage() {
     setConversations((cs) => [conv, ...cs]);
     setActiveId(tempId);
     if (user) {
-      const create = fsCreateConversation(user.id, conv.title).then(
+      const create = fsCreateConversation(user.id, conv.title, model).then(
         (realId) => {
           // Swap the temp id for the Firestore id everywhere in state.
           setConversations((cs) =>
@@ -421,6 +475,20 @@ export default function ChatPage() {
       );
     }
     return conv;
+  }
+
+  /** Switch the active scripture. Active conversation flips to the most
+   *  recent conversation in the new scripture, or null if there is none.
+   *  Per-scripture conversation isolation is enforced here. */
+  function changeModel(next: ScriptureId) {
+    if (next === model) return;
+    setModel(next);
+    setConversations((cs) => {
+      const inNextModel = cs.filter((c) => c.model === next);
+      setActiveId(inNextModel[0]?.id ?? null);
+      return cs;
+    });
+    setSidebarOpen(false);
   }
 
   function deleteConversation(id: string) {
@@ -538,7 +606,7 @@ export default function ChatPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: content, history }),
+        body: JSON.stringify({ message: content, history, model: conv.model }),
       });
       if (!res.ok || !res.body) throw new Error("The oracle is silent.");
 
@@ -702,9 +770,16 @@ export default function ChatPage() {
     messages[messages.length - 1]?.role === "assistant" &&
     messages[messages.length - 1]?.content === "";
 
-  const sidebarItems: SidebarConversation[] = [...conversations]
+  // Sidebar shows only the conversations belonging to the active scripture
+  // — that's the "no cross-contamination" rule made visible. Sorted newest
+  // first so the most recently-touched thread is at the top.
+  const sidebarItems: SidebarConversation[] = conversations
+    .filter((c) => c.model === model)
     .sort((a, b) => b.updatedAt - a.updatedAt)
     .map((c) => ({ id: c.id, title: c.title, updatedAt: c.updatedAt }));
+
+  const scripture = getScripture(model);
+  const starters = STARTERS[model];
 
   return (
     <div className="relative flex h-[100dvh] w-full overflow-hidden bg-parchment text-ink">
@@ -754,7 +829,7 @@ export default function ChatPage() {
           <button
             onClick={() => startNewConversation()}
             aria-label="New conversation"
-            className="hidden h-10 items-center gap-1.5 rounded-lg border border-parchment-muted bg-parchment px-3 text-sm text-ink-soft transition-colors hover:border-maroon/40 hover:text-maroon sm:inline-flex"
+            className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-parchment-muted bg-parchment px-3 text-sm text-ink-soft transition-colors hover:border-maroon/40 hover:text-maroon"
           >
             New
           </button>
@@ -786,12 +861,13 @@ export default function ChatPage() {
                   </span>
                 </h1>
                 <p className="mt-3 max-w-md text-balance text-[13px] text-ink-soft sm:text-sm">
-                  Describe your situation in plain words. Every answer cites a
-                  real verse from the Bhagavad Gita. Nothing is invented.
+                  Describe your situation in plain words. Every answer is
+                  grounded in the {scripture.meta.fullName}. Nothing is
+                  invented.
                 </p>
 
                 <div className="mt-7 grid w-full gap-2.5 sm:mt-9 sm:grid-cols-2">
-                  {STARTERS.map((s) => (
+                  {starters.map((s) => (
                     <button
                       key={s}
                       onClick={() => send(s)}
@@ -945,7 +1021,7 @@ export default function ChatPage() {
           }}
         >
           <div className="mx-auto w-full max-w-3xl">
-            <div className="relative flex items-end gap-2 rounded-2xl border border-parchment-muted bg-parchment p-2 shadow-[0_10px_30px_-18px_rgba(122,31,31,0.25)] focus-within:border-maroon/50 focus-within:shadow-[0_12px_36px_-14px_rgba(122,31,31,0.35)]">
+            <div className="relative rounded-2xl border border-parchment-muted bg-parchment p-2 shadow-[0_10px_30px_-18px_rgba(122,31,31,0.25)] focus-within:border-maroon/50 focus-within:shadow-[0_12px_36px_-14px_rgba(122,31,31,0.35)]">
               <textarea
                 ref={taRef}
                 rows={1}
@@ -957,20 +1033,30 @@ export default function ChatPage() {
                 autoCorrect="on"
                 spellCheck
                 enterKeyHint="send"
-                className="max-h-40 flex-1 resize-none overflow-y-hidden bg-transparent px-3 py-2.5 text-base text-ink outline-none placeholder:text-ink-muted/60 [scrollbar-width:thin]"
+                className="block max-h-40 w-full resize-none overflow-y-hidden bg-transparent px-3 py-2.5 text-base text-ink outline-none placeholder:text-ink-muted/60 [scrollbar-width:thin]"
               />
-              <button
-                onClick={() => send(input)}
-                disabled={!input.trim() || streaming}
-                aria-label="Send"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-maroon text-parchment shadow-[0_10px_24px_-8px_rgba(122,31,31,0.55)] transition-all hover:bg-maroon-deep hover:shadow-[0_14px_32px_-6px_rgba(122,31,31,0.6)] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {streaming ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-parchment border-t-transparent" />
-                ) : (
-                  <ArrowUp size={18} />
-                )}
-              </button>
+              {/* Composer toolbar — scripture picker on the left, send button
+                  on the right. Sits inside the bordered container so it feels
+                  like one cohesive input, the ChatGPT/Claude pattern. */}
+              <div className="mt-1 flex items-end justify-between gap-2 px-1">
+                <ModelDropdown
+                  value={model}
+                  onChange={changeModel}
+                  disabled={streaming}
+                />
+                <button
+                  onClick={() => send(input)}
+                  disabled={!input.trim() || streaming}
+                  aria-label="Send"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-maroon text-parchment shadow-[0_10px_24px_-8px_rgba(122,31,31,0.55)] transition-all hover:bg-maroon-deep hover:shadow-[0_14px_32px_-6px_rgba(122,31,31,0.6)] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {streaming ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-parchment border-t-transparent" />
+                  ) : (
+                    <ArrowUp size={17} />
+                  )}
+                </button>
+              </div>
             </div>
             <p className="mt-2 text-center text-[11px] text-ink-muted">
               MysticAI retrieves real verses. It never invents scripture.

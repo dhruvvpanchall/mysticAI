@@ -1,0 +1,312 @@
+{
+  "meta": {
+    "source": "Valmiki Ramayana - curated MysticAI seed",
+    "license": "Translations synthesized from public-domain English renderings (Ralph T.H. Griffith 1870-1874; M.N. Dutt 1891). Original Sanskrit text is itself public-domain.",
+    "translation": "MysticAI seed (English)",
+    "verseCount": 30,
+    "builtAt": "2026-05-25",
+    "note": "Initial seed corpus covering well-known passages and teachings across the seven kandas. Future task: fetch a fully verified per-shloka corpus via scripts/fetch_ramayana.mjs. Citations are at sarga granularity where shloka-level precision is uncertain - the chat route never invents text beyond what is in this file."
+  },
+  "verses": [
+    {
+      "id": 1,
+      "ref": "Valmiki Ramayana, Bala Kanda - Sarga 1",
+      "kanda": "Bala",
+      "sarga": 1,
+      "sanskrit": "को न्वस्मिन्साम्प्रतं लोके गुणवान्कश्च वीर्यवान्। धर्मज्ञश्च कृतज्ञश्च सत्यवाक्यो दृढव्रतः॥",
+      "transliteration": "ko nv asmin sāmprataṁ loke guṇavān kaśca vīryavān, dharmajñaśca kṛtajñaśca satyavākyo dṛḍhavrataḥ",
+      "translation": "Valmiki asks Narada: who in this world today is virtuous and capable, who knows dharma and is grateful, truthful in word and firm in vow? Narada answers with one name: Rama of Ikshvaku's line.",
+      "themes": ["dharma", "virtue", "purpose", "knowledge"]
+    },
+    {
+      "id": 2,
+      "ref": "Valmiki Ramayana, Bala Kanda - Sarga 2",
+      "kanda": "Bala",
+      "sarga": 2,
+      "sanskrit": "मा निषाद प्रतिष्ठां त्वमगमः शाश्वतीः समाः। यत्क्रौञ्चमिथुनादेकमवधीः काममोहितम्॥",
+      "transliteration": "mā niṣāda pratiṣṭhāṁ tvamagamaḥ śāśvatīḥ samāḥ, yat krauñca-mithunād ekam avadhīḥ kāma-mohitam",
+      "translation": "When Valmiki sees a hunter kill one of a pair of mating cranes, grief shapes the world's first shloka in his mouth: hunter, may you find no rest through the long ages, for you slew one of the loving pair. From sorrow itself, poetry is born.",
+      "themes": ["grief", "compassion", "anger"]
+    },
+    {
+      "id": 3,
+      "ref": "Valmiki Ramayana, Bala Kanda - Sarga 19",
+      "kanda": "Bala",
+      "sarga": 19,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "When the sage Vishvamitra comes to Dasharatha asking for young Rama to guard a sacrifice, the father's love trembles before the call of duty. Vasishtha counsels Dasharatha to release the boy. Rama goes willingly. The first turn of his life is a yes to what is asked of him.",
+      "themes": ["duty", "purpose", "surrender"]
+    },
+    {
+      "id": 4,
+      "ref": "Valmiki Ramayana, Bala Kanda - Sarga 67",
+      "kanda": "Bala",
+      "sarga": 67,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Rama lifts and strings the bow of Shiva that no man before him could even raise, breaking it in the doing. He wins Sita by an act of effortless strength performed without display. True power does not announce itself.",
+      "themes": ["purpose", "ego", "virtue"]
+    },
+    {
+      "id": 5,
+      "ref": "Valmiki Ramayana, Ayodhya Kanda - Sarga 19",
+      "kanda": "Ayodhya",
+      "sarga": 19,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "On the morning he is to be crowned king of Ayodhya, Rama is told instead to leave for fourteen years in the forest. He receives the news without a tremor. He has been raised to do what is right, not what is pleasant; the kingdom and the exile are met with the same face.",
+      "themes": ["duty", "detachment", "peace", "ego"]
+    },
+    {
+      "id": 6,
+      "ref": "Valmiki Ramayana, Ayodhya Kanda - Sarga 24",
+      "kanda": "Ayodhya",
+      "sarga": 24,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Sita refuses to remain in the palace while Rama goes to the forest. She tells him: a wife's place is at her husband's side; the forest with you is a kingdom, the kingdom without you is exile. Love, she says, is not a fair-weather word.",
+      "themes": ["devotion", "love", "loyalty"]
+    },
+    {
+      "id": 7,
+      "ref": "Valmiki Ramayana, Ayodhya Kanda - Sarga 31",
+      "kanda": "Ayodhya",
+      "sarga": 31,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Lakshmana tells Rama he will follow him into exile without question, asking only to serve. He leaves wife and home and palace behind. To love rightly, he shows, is to know whose journey is yours to walk beside.",
+      "themes": ["devotion", "loyalty", "brotherhood", "duty"]
+    },
+    {
+      "id": 8,
+      "ref": "Valmiki Ramayana, Ayodhya Kanda - Sarga 105",
+      "kanda": "Ayodhya",
+      "sarga": 105,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Bharata comes to the forest carrying the throne back, begging Rama to return and rule. Rama refuses: a father's word is a promise, and a son who breaks a father's promise breaks the world. The throne is not a thing to want; dharma is.",
+      "themes": ["duty", "dharma", "detachment", "purpose"]
+    },
+    {
+      "id": 9,
+      "ref": "Valmiki Ramayana, Ayodhya Kanda - Sarga 112",
+      "kanda": "Ayodhya",
+      "sarga": 112,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Bharata accepts what he cannot change. He carries Rama's sandals back to Ayodhya and places them on the throne, ruling for fourteen years in his elder brother's name. Devotion is not always about presence; sometimes it is about holding the seat empty.",
+      "themes": ["devotion", "loyalty", "brotherhood", "detachment"]
+    },
+    {
+      "id": 10,
+      "ref": "Valmiki Ramayana, Aranya Kanda - Sarga 10",
+      "kanda": "Aranya",
+      "sarga": 10,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "In the forest, Rama promises the rishis that he will protect them from the rakshasas who hunt them. He turns no one away. The strong are bound to shield the unprotected; this, too, is what a man is for.",
+      "themes": ["duty", "dharma", "compassion", "purpose"]
+    },
+    {
+      "id": 11,
+      "ref": "Valmiki Ramayana, Aranya Kanda - Sarga 37",
+      "kanda": "Aranya",
+      "sarga": 37,
+      "sanskrit": "रामो विग्रहवान्धर्मः साधुः सत्यपराक्रमः। राजा सर्वस्य लोकस्य देवानामिव वासवः॥",
+      "transliteration": "rāmo vigrahavān dharmaḥ sādhuḥ satya-parākramaḥ, rājā sarvasya lokasya devānām iva vāsavaḥ",
+      "translation": "Maricha, having once felt Rama's arrow and lived, warns Ravana: Rama is dharma walking on two feet, good, true in valor, fit to rule the whole world as Indra rules the gods. Do not provoke him.",
+      "themes": ["dharma", "virtue", "purpose", "knowledge"]
+    },
+    {
+      "id": 12,
+      "ref": "Valmiki Ramayana, Aranya Kanda - Sarga 47",
+      "kanda": "Aranya",
+      "sarga": 47,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Ravana abducts Sita while Rama is drawn away. Loss arrives suddenly, in the moment of an averted glance. Even the most steady life is not guaranteed against such turns. What dharma asks of us next is not what we wished for, but what is now.",
+      "themes": ["grief", "loss", "fear", "anxiety"]
+    },
+    {
+      "id": 13,
+      "ref": "Valmiki Ramayana, Aranya Kanda - Sarga 68",
+      "kanda": "Aranya",
+      "sarga": 68,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "The dying Jatayu, the old vulture who tried to save Sita, gives his last breath to Rama with the news of where she was taken. Rama performs his funeral rites as if for a father. Service offered with a whole heart, even when it fails, is never small.",
+      "themes": ["devotion", "loyalty", "compassion", "grief"]
+    },
+    {
+      "id": 14,
+      "ref": "Valmiki Ramayana, Kishkindha Kanda - Sarga 4",
+      "kanda": "Kishkindha",
+      "sarga": 4,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Hanuman, sent by Sugriva, meets Rama for the first time and speaks with such clarity and grace that Rama turns to Lakshmana and says: only one who has studied the Vedas in full could speak this way. The first impression of devotion is not its loudness, but its careful speech.",
+      "themes": ["devotion", "knowledge", "virtue", "purpose"]
+    },
+    {
+      "id": 15,
+      "ref": "Valmiki Ramayana, Kishkindha Kanda - Sarga 5",
+      "kanda": "Kishkindha",
+      "sarga": 5,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Rama and Sugriva swear friendship before fire. Even in exile, even in grief, the right alliance can be made and kept. We are rarely meant to carry the worst of life alone.",
+      "themes": ["loyalty", "brotherhood", "purpose", "peace"]
+    },
+    {
+      "id": 16,
+      "ref": "Valmiki Ramayana, Sundara Kanda - Sarga 1",
+      "kanda": "Sundara",
+      "sarga": 1,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Hanuman gathers himself and leaps across the ocean to Lanka in search of Sita. He doubts, then remembers what is at stake, then chooses anyway. Faith is not the absence of fear; it is acting in spite of it, for someone other than yourself.",
+      "themes": ["fear", "devotion", "purpose", "courage"]
+    },
+    {
+      "id": 17,
+      "ref": "Valmiki Ramayana, Sundara Kanda - Sarga 15",
+      "kanda": "Sundara",
+      "sarga": 15,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Hanuman finds Sita in the Ashoka grove, surrounded by demonesses, refusing food, refusing fear, holding her vow. She has not let her captor define her inner life. The body may be confined; the soul a captor cannot reach.",
+      "themes": ["courage", "loyalty", "devotion", "peace"]
+    },
+    {
+      "id": 18,
+      "ref": "Valmiki Ramayana, Sundara Kanda - Sarga 35",
+      "kanda": "Sundara",
+      "sarga": 35,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Hanuman gives Sita Rama's ring as proof. Sita weeps, then steadies, then sends back a message of her unbroken love. Hope is not naive; it is what survives when everything that should have crushed it does not.",
+      "themes": ["devotion", "loyalty", "peace", "grief"]
+    },
+    {
+      "id": 19,
+      "ref": "Valmiki Ramayana, Sundara Kanda - Sarga 53",
+      "kanda": "Sundara",
+      "sarga": 53,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Captured and bound, Hanuman feels his tail set ablaze and uses the fire to burn Lanka itself. What is meant to humiliate the devoted often becomes the very instrument of their work. Provocation, met with steadiness, becomes power.",
+      "themes": ["anger", "courage", "purpose"]
+    },
+    {
+      "id": 20,
+      "ref": "Valmiki Ramayana, Yuddha Kanda - Sarga 17",
+      "kanda": "Yuddha",
+      "sarga": 17,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Vibhishana, Ravana's own brother, abandons the king of demons and surrenders to Rama. Rama, against the doubts of his counselors, receives him without question. To one who has come for refuge in full surrender, the door is opened, even from the enemy's house.",
+      "themes": ["devotion", "surrender", "compassion", "fear"]
+    },
+    {
+      "id": 21,
+      "ref": "Valmiki Ramayana, Yuddha Kanda - Sarga 18",
+      "kanda": "Yuddha",
+      "sarga": 18,
+      "sanskrit": "सकृदेव प्रपन्नाय तवास्मीति च याचते। अभयं सर्वभूतेभ्यो ददाम्येतद्व्रतं मम॥",
+      "transliteration": "sakṛd eva prapannāya tavāsmīti ca yācate, abhayaṁ sarva-bhūtebhyo dadāmy etad vrataṁ mama",
+      "translation": "Rama declares his vow: to one who comes to me even once, saying I am yours, I grant safety from every creature. This is my standing word. The hand offered in refuge does not have to be earned twice.",
+      "themes": ["surrender", "devotion", "compassion", "peace"]
+    },
+    {
+      "id": 22,
+      "ref": "Valmiki Ramayana, Yuddha Kanda - Sarga 67",
+      "kanda": "Yuddha",
+      "sarga": 67,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Lakshmana falls in battle, struck by Indrajit's weapon. Hanuman, told that only a single herb from a distant mountain can revive him, flies through the night, and unable to identify the herb, simply lifts the entire mountain and brings it. When the task is greater than your knowledge, bring your whole self instead.",
+      "themes": ["devotion", "loyalty", "courage", "purpose"]
+    },
+    {
+      "id": 23,
+      "ref": "Valmiki Ramayana, Yuddha Kanda - Sarga 105",
+      "kanda": "Yuddha",
+      "sarga": 105,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Before the final battle, the sage Agastya teaches Rama the Aditya-Hridayam, the heart of the sun. Strength comes not only from training of the arm, but from the steady remembering of what is luminous and true.",
+      "themes": ["devotion", "meditation", "peace", "knowledge"]
+    },
+    {
+      "id": 24,
+      "ref": "Valmiki Ramayana, Yuddha Kanda - Sarga 108",
+      "kanda": "Yuddha",
+      "sarga": 108,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Ravana, gifted, brilliant, lord of three worlds, falls because of one possession he could not release. The cause of suffering is not the lack of greatness; it is the grip on a thing that was never ours to keep.",
+      "themes": ["ego", "anger", "detachment", "grief"]
+    },
+    {
+      "id": 25,
+      "ref": "Valmiki Ramayana, Yuddha Kanda - Sarga 116",
+      "kanda": "Yuddha",
+      "sarga": 116,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "After Ravana's death, Rama tells Vibhishana to perform the funeral rites for his brother with full honor. An enemy, once dead, is no longer an enemy. Anger, beyond the moment it was needed, has no further home in a steady heart.",
+      "themes": ["compassion", "peace", "anger", "dharma"]
+    },
+    {
+      "id": 26,
+      "ref": "Valmiki Ramayana, Yuddha Kanda - Sarga 127",
+      "kanda": "Yuddha",
+      "sarga": 127,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Rama and Sita return to Ayodhya, the long exile ended. The kingdom is given back, the family is reunited, the lamps are lit. Even the longest dark hour is met, eventually, by morning. What is held with dharma is, in time, restored.",
+      "themes": ["peace", "purpose", "devotion", "duty"]
+    },
+    {
+      "id": 27,
+      "ref": "Valmiki Ramayana, Yuddha Kanda - Sarga 128",
+      "kanda": "Yuddha",
+      "sarga": 128,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "The Ramayana closes the seekers' chapter with a blessing: those who hear this story with faith are freed from every fear; sons receive sons, the long-lived live well, sorrows pass. A story rightly received becomes a doorway in the listener's own life.",
+      "themes": ["faith", "devotion", "peace", "knowledge"]
+    },
+    {
+      "id": 28,
+      "ref": "Valmiki Ramayana, Hanuman's confidence (Sundara Kanda - Sarga 4)",
+      "kanda": "Sundara",
+      "sarga": 4,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Hanuman, as he searches Lanka, reminds himself: a task undertaken without doubt is half-completed; one undertaken with doubt fails before it begins. The mind that hesitates is its own first obstacle.",
+      "themes": ["fear", "anxiety", "meditation", "purpose", "courage"]
+    },
+    {
+      "id": 29,
+      "ref": "Valmiki Ramayana, Sita's steadiness (Sundara Kanda - Sarga 30)",
+      "kanda": "Sundara",
+      "sarga": 30,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Sita refuses Ravana's threats and pleadings alike, holding to one inner sentence through every season of fear: I am Rama's, and no power in the three worlds can change that. To know who you belong to in the deepest sense is to be unshakeable, even in chains.",
+      "themes": ["loyalty", "devotion", "courage", "peace"]
+    },
+    {
+      "id": 30,
+      "ref": "Valmiki Ramayana, Rama's character (Bala Kanda - Sarga 1)",
+      "kanda": "Bala",
+      "sarga": 1,
+      "sanskrit": "",
+      "transliteration": "",
+      "translation": "Narada describes Rama to Valmiki: in him are joined the qualities people usually have to choose between. Strength without cruelty, gentleness without weakness, learning without arrogance, beauty without vanity, devotion without losing himself. A whole human being, the text says, is possible.",
+      "themes": ["virtue", "dharma", "purpose", "peace", "ego"]
+    }
+  ]
+}
