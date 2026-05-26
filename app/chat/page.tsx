@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowUp,
-  Sparkles,
   Quote,
   ShieldCheck,
   Languages,
@@ -851,7 +850,7 @@ export default function ChatPage() {
                 <div className="relative mb-6">
                   <div className="absolute inset-0 animate-pulse-glow rounded-full bg-saffron/40 blur-2xl" />
                   <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-saffron/50 bg-saffron-50">
-                    <Sparkles className="h-7 w-7 text-maroon" />
+                    <BrandMark bare size="lg" className="h-12 w-12" />
                   </div>
                 </div>
                 <h1 className="text-balance font-display text-[26px] leading-tight text-ink sm:text-4xl">
