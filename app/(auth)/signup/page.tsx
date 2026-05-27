@@ -41,6 +41,8 @@ export default function SignupPage() {
 
   const score = strengthOf(password);
 
+  // Already signed in? Skip straight to the sanctum — no peek at the
+  // auth form, ChatGPT/Claude-style.
   React.useEffect(() => {
     if (!authLoading && user) router.replace("/chat");
   }, [authLoading, user, router]);

@@ -29,6 +29,7 @@ import { GlowingButton } from "@/components/GlowingButton";
 import { Navbar } from "@/components/landing/Navbar";
 import { Reveal } from "@/components/landing/Reveal";
 import { BrandLockup, BrandMark } from "@/components/BrandMark";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -1138,10 +1139,19 @@ function SectionSubtitle({ children }: { children: React.ReactNode }) {
 
 export default function HomePage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+
   React.useEffect(() => {
     router.prefetch("/login");
     router.prefetch("/signup");
   }, [router]);
+
+  // Returning seekers (Firebase session still alive) skip the marketing
+  // page and land directly in the sanctum. New visitors stay on / and
+  // see the landing.
+  React.useEffect(() => {
+    if (!authLoading && user) router.replace("/chat");
+  }, [authLoading, user, router]);
 
   return (
     <div className="relative min-h-[100dvh] w-full overflow-hidden bg-parchment text-ink">
