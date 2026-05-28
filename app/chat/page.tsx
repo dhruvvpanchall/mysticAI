@@ -13,6 +13,7 @@ import {
 import { Sidebar, type SidebarConversation } from "@/components/chat/Sidebar";
 import { ModelDropdown } from "@/components/chat/ModelDropdown";
 import { BrandLockup, BrandMark } from "@/components/BrandMark";
+import { SidebarDailyPractice } from "@/components/today/SidebarDailyPractice";
 import { useAuth } from "@/lib/auth";
 import {
   appendMessage as fsAppendMessage,
@@ -266,7 +267,6 @@ export default function ChatPage() {
   const [streaming, setStreaming] = React.useState(false);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [hydrated, setHydrated] = React.useState(false);
-
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const taRef = React.useRef<HTMLTextAreaElement>(null);
   // In-flight Firestore conversation creates, keyed by their optimistic
@@ -342,12 +342,10 @@ export default function ChatPage() {
           localStorage.getItem(MODEL_KEY(user.id))
         );
         setModel(savedModel);
-        const savedActive = localStorage.getItem(ACTIVE_KEY(user.id));
-        const stillExists = convs.find(
-          (c) => c.id === savedActive && c.model === savedModel
-        );
-        const fallback = convs.find((c) => c.model === savedModel);
-        setActiveId(stillExists ? savedActive : fallback?.id ?? null);
+        // Always reopen to a fresh conversation surface (empty state) so
+        // the seeker re-enters into a new chat rather than resuming the
+        // last thread. Previous conversations stay in the sidebar.
+        setActiveId(null);
       } catch (err) {
         console.error("[chat] failed to load conversations:", err);
       } finally {
@@ -359,13 +357,18 @@ export default function ChatPage() {
     };
   }, [user]);
 
-  // Active conversation id is pure UI state — kept in localStorage so a
-  // page refresh lands on the same thread the seeker was reading.
+  // Note: activeId is NOT persisted across reloads — per product
+  // direction, every reopen lands in a fresh empty-state chat. The
+  // ACTIVE_KEY localStorage entry from earlier builds is cleared on
+  // load so old values don't linger.
   React.useEffect(() => {
-    if (!user || !hydrated) return;
-    if (activeId) localStorage.setItem(ACTIVE_KEY(user.id), activeId);
-    else localStorage.removeItem(ACTIVE_KEY(user.id));
-  }, [user, hydrated, activeId]);
+    if (!user) return;
+    try {
+      localStorage.removeItem(ACTIVE_KEY(user.id));
+    } catch {
+      // ignore
+    }
+  }, [user]);
 
   // Persist the active scripture per user, so a refresh lands the seeker
   // in the same model they were in.
@@ -805,6 +808,15 @@ export default function ChatPage() {
         }}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        topSlot={
+          <SidebarDailyPractice
+            uid={user.id}
+            onAskMystic={(seed) => {
+              setSidebarOpen(false);
+              send(seed);
+            }}
+          />
+        }
       />
 
       {/* Main column */}

@@ -41,6 +41,9 @@ interface SidebarProps {
   open: boolean;
   /** Close handler for the mobile drawer. */
   onClose: () => void;
+  /** Optional content slot rendered above the conversation list. The chat
+   *  page wires the Daily Practice block (Today's Wisdom + streak) here. */
+  topSlot?: React.ReactNode;
 }
 
 type RowMode = "normal" | "rename" | "confirm-delete";
@@ -212,6 +215,7 @@ export function Sidebar({
   onLogout,
   open,
   onClose,
+  topSlot,
 }: SidebarProps) {
   return (
     <>
@@ -257,8 +261,16 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* Conversation list — top of the rail so the most-used affordance
-            (jumping between past chats) is closest to thumb reach. */}
+        {/* Optional top slot — Daily Practice block (Today's Wisdom +
+            streak) when the chat page passes it in. Sits above the
+            conversation list so the daily ritual catches the eye first. */}
+        {topSlot && (
+          <div className="border-b border-parchment-muted/60 px-2 py-2.5">
+            {topSlot}
+          </div>
+        )}
+
+        {/* Conversation list */}
         <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
           {conversations.length === 0 ? (
             <p className="px-3 py-6 text-center text-xs text-ink-muted">
