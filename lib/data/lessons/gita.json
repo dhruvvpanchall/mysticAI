@@ -1,0 +1,131 @@
+{
+  "meta": {
+    "scripture": "gita",
+    "totalVerses": 700,
+    "lessonsAvailable": 10,
+    "lastUpdated": "2026-05-28",
+    "note": "Curated daily lessons. Sanskrit text follows the standard Sridhar Swami / BORI reading. English meanings drawn from public-domain commentaries (Easwaran, Sivananda, Sri Aurobindo) and rewritten in calm modern English. The AI Explanation and Modern Life Meaning are MysticAI's own editorial layer."
+  },
+  "verses": [
+    {
+      "ref": "1.1",
+      "chapter": 1,
+      "verse": 1,
+      "sanskrit": "धृतराष्ट्र उवाच |\nधर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः |\nमामकाः पाण्डवाश्चैव किमकुर्वत सञ्जय || १ ||",
+      "transliteration": "dhṛtarāṣṭra uvāca |\ndharma-kṣetre kuru-kṣetre samavetā yuyutsavaḥ |\nmāmakāḥ pāṇḍavāś caiva kim akurvata sañjaya || 1 ||",
+      "hindi": "धृतराष्ट्र ने पूछा: हे संजय, धर्मक्षेत्र कुरुक्षेत्र में युद्ध की इच्छा से एकत्रित मेरे पुत्रों और पाण्डु के पुत्रों ने क्या किया?",
+      "english": "Dhritarashtra said: O Sanjaya, gathered on the holy field of Kurukshetra, eager to fight, what did my sons and the sons of Pandu do?",
+      "aiExplanation": "The Gita opens with a question, not an answer. A blind king asks his minister to describe a battlefield he cannot see. The word he uses, dharmakshetra, means 'the field of dharma' — the very ground where right action will be tested.",
+      "modernLife": "Every morning is your own Kurukshetra. You wake up and a thousand small choices line up against your values: what to eat, who to message, where to spend your hour. Notice that you, too, often ask for a report on a field you are not standing on — replaying conversations, predicting outcomes. The Gita's first lesson is to step onto your field today, not watch it from a distance.",
+      "reflection": "What is the 'field' you are standing on today, and which choice quietly waits for you there?"
+    },
+    {
+      "ref": "1.2",
+      "chapter": 1,
+      "verse": 2,
+      "sanskrit": "सञ्जय उवाच |\nदृष्ट्वा तु पाण्डवानीकं व्यूढं दुर्योधनस्तदा |\nआचार्यमुपसङ्गम्य राजा वचनमब्रवीत् || २ ||",
+      "transliteration": "sañjaya uvāca |\ndṛṣṭvā tu pāṇḍavānīkaṃ vyūḍhaṃ duryodhanas tadā |\nācāryam upasaṅgamya rājā vacanam abravīt || 2 ||",
+      "hindi": "संजय बोले: व्यूह रचना में सजी पाण्डव सेना को देखकर राजा दुर्योधन अपने आचार्य द्रोण के पास गया और उनसे ये वचन कहे।",
+      "english": "Sanjaya said: Seeing the Pandava army arrayed for battle, King Duryodhana approached his teacher Drona and spoke these words.",
+      "aiExplanation": "Duryodhana sees the opposing army, feels uneasy, and immediately walks to his teacher — not for wisdom, but for reassurance. His first reaction to discomfort is to seek someone who will calm him without challenging him.",
+      "modernLife": "When something unsettles you, watch where your feet go first. Many of us scroll, snack, or text the friend who will agree. Notice the impulse to soothe rather than examine. The wiser path is to sit with the discomfort for a moment, ask what it is really pointing at, and then choose your next step from clarity rather than from panic.",
+      "reflection": "When you felt anxious recently, where did your mind immediately run? Did it run toward truth, or toward comfort?"
+    },
+    {
+      "ref": "1.3",
+      "chapter": 1,
+      "verse": 3,
+      "sanskrit": "पश्यैतां पाण्डुपुत्राणामाचार्य महतीं चमूम् |\nव्यूढां द्रुपदपुत्रेण तव शिष्येण धीमता || ३ ||",
+      "transliteration": "paśyaitāṃ pāṇḍu-putrāṇām ācārya mahatīṃ camūm |\nvyūḍhāṃ drupada-putreṇa tava śiṣyeṇa dhīmatā || 3 ||",
+      "hindi": "हे आचार्य! देखिए, आपके बुद्धिमान शिष्य द्रुपदपुत्र (धृष्टद्युम्न) द्वारा व्यूह रचना से सजी पाण्डु पुत्रों की यह विशाल सेना।",
+      "english": "Behold, O teacher, this mighty army of the sons of Pandu, arrayed by your own wise disciple, the son of Drupada.",
+      "aiExplanation": "Duryodhana points out that the enemy commander was once Drona's own student. It is a subtle barb — he wants to wound his teacher with the memory of what he taught and lost. Insecurity often disguises itself as observation.",
+      "modernLife": "Notice how often your 'just pointing it out' is actually a quiet attempt to wound someone, including yourself. We replay our own losses by listing what others now have. The Gita is showing you what fear sounds like when it is dressed as commentary. Today, when you feel the urge to point at someone else's success, ask what is really being pointed at within you.",
+      "reflection": "What 'observation' have you been making lately that is really a hidden hurt?"
+    },
+    {
+      "ref": "1.4",
+      "chapter": 1,
+      "verse": 4,
+      "sanskrit": "अत्र शूरा महेष्वासा भीमार्जुनसमा युधि |\nयुयुधानो विराटश्च द्रुपदश्च महारथः || ४ ||",
+      "transliteration": "atra śūrā maheṣv-āsā bhīmārjuna-samā yudhi |\nyuyudhāno virāṭaś ca drupadaś ca mahā-rathaḥ || 4 ||",
+      "hindi": "इस सेना में बड़े-बड़े धनुर्धर हैं, जो युद्ध में भीम और अर्जुन के समान हैं — युयुधान, विराट, और महारथी द्रुपद।",
+      "english": "Here are heroes, mighty archers, equal in battle to Bhima and Arjuna: Yuyudhana, Virata, and the great chariot-warrior Drupada.",
+      "aiExplanation": "Duryodhana magnifies the strength of those who oppose him. Fear has a strange talent: it makes everything across from us look taller than it is. He counts their warriors but forgets his own bedrock.",
+      "modernLife": "Fear loves an inventory. It will list every reason the deadline is impossible, every skill the other person has that you lack, every way this could go wrong. The Gita simply shows you that voice without judging it. Today, when fear starts its catalog, let it speak. Then turn and count what is actually in your hands.",
+      "reflection": "What 'mighty archers' has your mind been listing against you this week? Name one strength of your own that you have forgotten."
+    },
+    {
+      "ref": "1.5",
+      "chapter": 1,
+      "verse": 5,
+      "sanskrit": "धृष्टकेतुश्चेकितानः काशिराजश्च वीर्यवान् |\nपुरुजित्कुन्तिभोजश्च शैब्यश्च नरपुङ्गवः || ५ ||",
+      "transliteration": "dhṛṣṭaketuś cekitānaḥ kāśirājaś ca vīryavān |\npurujit kuntibhojaś ca śaibyaś ca nara-puṅgavaḥ || 5 ||",
+      "hindi": "धृष्टकेतु, चेकितान, पराक्रमी काशिराज, पुरुजित, कुन्तिभोज और मनुष्यों में श्रेष्ठ शैब्य भी हैं।",
+      "english": "Dhrishtaketu, Chekitana, and the valiant king of Kashi; Purujit, Kuntibhoja, and Shaibya, foremost among men.",
+      "aiExplanation": "Another six names. Duryodhana is still counting. The verse shows how the anxious mind keeps producing reasons, hoping that the next reason will finally settle it.",
+      "modernLife": "There is always one more voice in your head when you are uncertain — the well-wisher, the skeptic, the ghost of an old failure, the imagined critic. Each one feels important in the moment. The Gita lets you hear how endless that list is. Today, notice the parade of inner voices and ask which one is actually helping you decide.",
+      "reflection": "Which voice in your head do you keep returning to today? Is it guiding you, or just keeping you company in the doubt?"
+    },
+    {
+      "ref": "1.6",
+      "chapter": 1,
+      "verse": 6,
+      "sanskrit": "युधामन्युश्च विक्रान्त उत्तमौजाश्च वीर्यवान् |\nसौभद्रो द्रौपदेयाश्च सर्व एव महारथाः || ६ ||",
+      "transliteration": "yudhāmanyuś ca vikrānta uttamaujāś ca vīryavān |\nsaubhadro draupadeyāś ca sarva eva mahā-rathāḥ || 6 ||",
+      "hindi": "पराक्रमी युधामन्यु, बलवान उत्तमौजा, सुभद्रा का पुत्र अभिमन्यु और द्रौपदी के पाँचों पुत्र — ये सब महारथी हैं।",
+      "english": "The valiant Yudhamanyu, the strong Uttamauja, Abhimanyu the son of Subhadra, and the sons of Draupadi — all great chariot-warriors.",
+      "aiExplanation": "The list finally ends. Duryodhana names the youngest warriors last — Abhimanyu and Draupadi's sons. Even fear runs out of fuel eventually. What remains after the listing is the choice that was waiting all along.",
+      "modernLife": "Your mind will list and list, but at some point the list ends and you are still standing in front of the decision. The Gita is honoring how exhausting fear is — and then, gently, returning you to action. Today, when the listing finishes, do not start it again. Take one small step on the thing you have been circling.",
+      "reflection": "What is the small action you have been listing reasons to avoid? Could you take just the first step of it today?"
+    },
+    {
+      "ref": "1.7",
+      "chapter": 1,
+      "verse": 7,
+      "sanskrit": "अस्माकं तु विशिष्टा ये तान्निबोध द्विजोत्तम |\nनायका मम सैन्यस्य संज्ञार्थं तान्ब्रवीमि ते || ७ ||",
+      "transliteration": "asmākaṃ tu viśiṣṭā ye tān nibodha dvijottama |\nnāyakā mama sainyasya saṃjñārthaṃ tān bravīmi te || 7 ||",
+      "hindi": "हे श्रेष्ठ ब्राह्मण! अब हमारी ओर के प्रमुख योद्धाओं को सुनिए — मैं अपनी सेना के नायकों का परिचय कराता हूँ।",
+      "english": "But now, O best of the twice-born, hear about those who are distinguished among us — the leaders of my own army. I name them for your awareness.",
+      "aiExplanation": "Finally, Duryodhana turns to his own side. Notice that he counted the opposition first, and only then thought to remember his own strength. This is the order in which fear always runs.",
+      "modernLife": "Most days we read the news, the messages, the worry, the criticism — and only at the very end remember to look at what we actually have. The Gita reverses that order in your day. Before opening any catalog of what is wrong, look once at what is yours: your breath, your hours, your people, your skill. Then turn to the rest.",
+      "reflection": "Before you list today's worries, can you list three things on your own side that are quietly here?"
+    },
+    {
+      "ref": "1.8",
+      "chapter": 1,
+      "verse": 8,
+      "sanskrit": "भवान्भीष्मश्च कर्णश्च कृपश्च समितिञ्जयः |\nअश्वत्थामा विकर्णश्च सौमदत्तिस्तथैव च || ८ ||",
+      "transliteration": "bhavān bhīṣmaś ca karṇaś ca kṛpaś ca samitiñjayaḥ |\naśvatthāmā vikarṇaś ca saumadattis tathaiva ca || 8 ||",
+      "hindi": "स्वयं आप (द्रोणाचार्य), भीष्म, कर्ण, युद्ध में सदा विजयी कृपाचार्य, अश्वत्थामा, विकर्ण और सोमदत्त के पुत्र — ये सब हैं।",
+      "english": "Yourself, Bhishma, Karna, and Kripa — the ever-victorious in battle; Ashvatthama, Vikarna, and the son of Somadatta.",
+      "aiExplanation": "Duryodhana lists his own giants: his teacher, his grandsire, his closest allies. Yet listing them does not give him what he wants — peace. Even surrounded by strength, an unquiet mind keeps feeling weak.",
+      "modernLife": "It is possible to have everything you need and still feel insufficient. The Gita shows you that the problem is not always what you have, but how you are holding it. Today, if you feel small, notice whether you are truly under-resourced or just under-trusting of the strength already around you.",
+      "reflection": "Who or what is already on your side that you have been forgetting to lean on?"
+    },
+    {
+      "ref": "1.9",
+      "chapter": 1,
+      "verse": 9,
+      "sanskrit": "अन्ये च बहवः शूरा मदर्थे त्यक्तजीविताः |\nनानाशस्त्रप्रहरणाः सर्वे युद्धविशारदाः || ९ ||",
+      "transliteration": "anye ca bahavaḥ śūrā mad-arthe tyakta-jīvitāḥ |\nnānā-śastra-praharaṇāḥ sarve yuddha-viśāradāḥ || 9 ||",
+      "hindi": "और भी अनेक शूरवीर हैं जिन्होंने मेरे लिए अपने प्राणों का त्याग किया है, जो विविध शस्त्रों से सुसज्जित हैं और सभी युद्धकला में निपुण हैं।",
+      "english": "And many other heroes, all skilled in warfare and bearing varied weapons, who have given their lives for my sake.",
+      "aiExplanation": "Duryodhana finally notices the people who have committed everything for him. The Gita gently shows that those who serve us deserve more than to be remembered last, after our fears.",
+      "modernLife": "There are people in your life whose loyalty you have stopped seeing because it is so steady. The parent who picks up the phone. The friend who never makes you ask twice. The colleague who covers for you quietly. The Gita's pause here is a reminder to look at them, today, while they are still beside you.",
+      "reflection": "Who has been quietly on your side for a long time? When did you last tell them?"
+    },
+    {
+      "ref": "1.10",
+      "chapter": 1,
+      "verse": 10,
+      "sanskrit": "अपर्याप्तं तदस्माकं बलं भीष्माभिरक्षितम् |\nपर्याप्तं त्विदमेतेषां बलं भीमाभिरक्षितम् || १० ||",
+      "transliteration": "aparyāptaṃ tad asmākaṃ balaṃ bhīṣmābhirakṣitam |\nparyāptaṃ tv idam eteṣāṃ balaṃ bhīmābhirakṣitam || 10 ||",
+      "hindi": "भीष्म के द्वारा रक्षित हमारा बल अपर्याप्त (अथवा असीम) है, जबकि भीम के द्वारा रक्षित उनका यह बल पर्याप्त (सीमित) है।",
+      "english": "Our strength, guarded by Bhishma, is unmeasurable; their strength, guarded by Bhima, is limited.",
+      "aiExplanation": "The verse is famously ambiguous — aparyaptam can mean both 'limitless' and 'insufficient.' Even Duryodhana's reassurance leaves doubt in the air. The wisest minds in the room cannot fully convince a heart that does not want to be convinced.",
+      "modernLife": "Reassurance from outside has a limit. People can tell you a thousand times that you will be okay, and a part of you will still refuse to land. The Gita is preparing you for what comes next: the answers will need to come from inside, from a deeper voice than calculation. Today, notice if you have been collecting reassurance instead of cultivating quiet conviction.",
+      "reflection": "What is something you keep asking others to confirm for you? What would it feel like to give yourself that answer instead?"
+    }
+  ]
+}
