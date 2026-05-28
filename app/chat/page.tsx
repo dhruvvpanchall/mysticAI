@@ -13,10 +13,6 @@ import {
 import { Sidebar, type SidebarConversation } from "@/components/chat/Sidebar";
 import { ModelDropdown } from "@/components/chat/ModelDropdown";
 import { BrandLockup, BrandMark } from "@/components/BrandMark";
-import { TodaysWisdomContainer } from "@/components/today/TodaysWisdomContainer";
-import { StreakBadge } from "@/components/today/StreakBadge";
-import type { StreakState } from "@/lib/practice/types";
-import { getStreak } from "@/lib/practice/streak";
 import { useAuth } from "@/lib/auth";
 import {
   appendMessage as fsAppendMessage,
@@ -270,12 +266,6 @@ export default function ChatPage() {
   const [streaming, setStreaming] = React.useState(false);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [hydrated, setHydrated] = React.useState(false);
-  const [streak, setStreak] = React.useState<StreakState>({
-    current: 0,
-    longest: 0,
-    lastActiveDate: null,
-    totalDays: 0,
-  });
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const taRef = React.useRef<HTMLTextAreaElement>(null);
@@ -288,22 +278,6 @@ export default function ChatPage() {
   React.useEffect(() => {
     if (!authLoading && !user) router.replace("/login");
   }, [authLoading, user, router]);
-
-  // Hydrate the seeker's streak so the header chip reflects reality on
-  // the first paint. TodaysWisdomContainer bumps this via onStreakChange
-  // when a verse is completed.
-  React.useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    getStreak(user.id)
-      .then((s) => {
-        if (!cancelled) setStreak(s);
-      })
-      .catch((err) => console.error("[chat] streak load failed:", err));
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
 
   // Load every conversation from Firestore once per sign-in. Optimistic
   // writes during the session keep React state in sync; the next sign-in
@@ -851,16 +825,13 @@ export default function ChatPage() {
             <BrandLockup size="sm" surface="light" />
           </div>
 
-          <div className="flex items-center gap-2">
-            <StreakBadge streak={streak.current} />
-            <button
-              onClick={() => startNewConversation()}
-              aria-label="New conversation"
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-parchment-muted bg-parchment px-3 text-sm text-ink-soft transition-colors hover:border-maroon/40 hover:text-maroon"
-            >
-              New
-            </button>
-          </div>
+          <button
+            onClick={() => startNewConversation()}
+            aria-label="New conversation"
+            className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-parchment-muted bg-parchment px-3 text-sm text-ink-soft transition-colors hover:border-maroon/40 hover:text-maroon"
+          >
+            New
+          </button>
         </header>
 
         {/* Conversation */}
@@ -874,41 +845,36 @@ export default function ChatPage() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7 }}
-                className="pt-2 sm:pt-4"
+                className="flex flex-col items-center pt-10 text-center sm:pt-20"
               >
-                {/* Greeting strip — small, personal, sits above the wisdom card. */}
-                <div className="mb-5 flex flex-col items-center gap-1 px-1 text-center sm:mb-6">
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-ink-muted">
-                    Namaste, {user.name?.split(" ")[0] || "seeker"}
-                  </p>
-                  <h1 className="font-display text-xl text-ink sm:text-2xl">
-                    Your daily Gita is here.
-                  </h1>
-                </div>
-
-                {/* The hero — Today's Wisdom card. */}
-                <TodaysWisdomContainer
-                  uid={user.id}
-                  onAskMystic={(seed) => send(seed)}
-                  onStreakChange={(s) => setStreak(s)}
-                />
-
-                {/* Quick starters — secondary path, "or ask anything else". */}
-                <div className="mt-8">
-                  <p className="mb-3 text-center text-[11px] uppercase tracking-[0.18em] text-ink-muted">
-                    Or ask anything else
-                  </p>
-                  <div className="grid gap-2.5 sm:grid-cols-2">
-                    {starters.map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => send(s)}
-                        className="group rounded-xl border border-parchment-muted bg-parchment p-3.5 text-left text-sm text-ink-soft transition-all hover:-translate-y-0.5 hover:border-maroon/40 hover:bg-saffron-50 hover:text-ink sm:p-4"
-                      >
-                        {s}
-                      </button>
-                    ))}
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 animate-pulse-glow rounded-full bg-saffron/40 blur-2xl" />
+                  <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-saffron/50 bg-saffron-50">
+                    <BrandMark bare size="lg" className="h-12 w-12" />
                   </div>
+                </div>
+                <h1 className="text-balance font-display text-[26px] leading-tight text-ink sm:text-4xl">
+                  Ask life&rsquo;s hardest questions,{" "}
+                  <span className="text-maroon">
+                    {user.name?.split(" ")[0] || "seeker"}
+                  </span>
+                </h1>
+                <p className="mt-3 max-w-md text-balance text-[13px] text-ink-soft sm:text-sm">
+                  Describe your situation in plain words. Every answer is
+                  grounded in the {scripture.meta.fullName}. Nothing is
+                  invented.
+                </p>
+
+                <div className="mt-7 grid w-full gap-2.5 sm:mt-9 sm:grid-cols-2">
+                  {starters.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => send(s)}
+                      className="group rounded-xl border border-parchment-muted bg-parchment p-3.5 text-left text-sm text-ink-soft transition-all hover:-translate-y-0.5 hover:border-maroon/40 hover:bg-saffron-50 hover:text-ink sm:p-4"
+                    >
+                      {s}
+                    </button>
+                  ))}
                 </div>
               </motion.div>
             ) : (
