@@ -234,9 +234,9 @@ export function DailyWisdomModal({
             exit={{ opacity: 0, scale: 0.97, y: 6 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="relative max-h-[92vh] w-full max-w-2xl overflow-hidden overflow-y-auto rounded-3xl border border-saffron/25 bg-gradient-to-br from-[#120a1d] via-[#0e0a18] to-[#180f1f] shadow-[0_30px_80px_-30px_rgba(244,165,42,0.5),0_0_0_1px_rgba(244,165,42,0.05)_inset]"
+            className="relative flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-saffron/25 bg-gradient-to-br from-[#120a1d] via-[#0e0a18] to-[#180f1f] shadow-[0_30px_80px_-30px_rgba(244,165,42,0.5),0_0_0_1px_rgba(244,165,42,0.05)_inset]"
           >
-            {/* Ambient halos */}
+            {/* Ambient halos — sit on the static shell, not the scroll area */}
             <div
               aria-hidden
               className="pointer-events-none absolute -top-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-saffron/25 blur-[80px]"
@@ -246,34 +246,39 @@ export function DailyWisdomModal({
               className="pointer-events-none absolute -bottom-40 -left-20 h-72 w-72 rounded-full bg-maroon/40 blur-[100px]"
             />
 
-            {/* Header strip */}
-            <div className="relative flex items-center justify-between border-b border-white/5 px-5 py-3.5 sm:px-7">
-              <div className="flex items-center gap-2.5">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-saffron/40 bg-saffron/10">
-                  <Sparkles size={13} className="text-saffron" />
-                </span>
-                <div className="leading-tight">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-saffron/80">
-                    Today's Wisdom
-                  </div>
-                  <div className="text-[11px] text-white/55">
-                    {lesson
-                      ? `Day ${dayNumber} · Adhyaya ${lesson.chapter} · Verse ${lesson.verse}`
-                      : "Loading…"}
+            {/* Floating close — pinned to the modal corner so it stays
+                reachable no matter how far the seeker has scrolled. */}
+            <button
+              onClick={attemptClose}
+              aria-label="Close"
+              className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/80 backdrop-blur-md transition-colors hover:border-saffron/40 hover:bg-black/60 hover:text-saffron"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Scroll container — owns the overflow + themed scrollbar */}
+            <div className="modal-scroll relative flex-1 overflow-y-auto">
+              {/* Header strip */}
+              <div className="relative flex items-center justify-between border-b border-white/5 px-5 py-3.5 pr-16 sm:px-7 sm:pr-20">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-saffron/40 bg-saffron/10">
+                    <Sparkles size={13} className="text-saffron" />
+                  </span>
+                  <div className="leading-tight">
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-saffron/80">
+                      Today's Wisdom
+                    </div>
+                    <div className="text-[11px] text-white/55">
+                      {lesson
+                        ? `Day ${dayNumber} · Adhyaya ${lesson.chapter} · Verse ${lesson.verse}`
+                        : "Loading…"}
+                    </div>
                   </div>
                 </div>
               </div>
-              <button
-                onClick={attemptClose}
-                aria-label="Close"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-white/55 transition-colors hover:bg-white/10 hover:text-white"
-              >
-                <X size={16} />
-              </button>
-            </div>
 
-            {/* Body */}
-            <div className="relative px-5 pb-6 pt-6 sm:px-7 sm:pt-8">
+              {/* Body */}
+              <div className="relative px-5 pb-6 pt-6 sm:px-7 sm:pt-8">
               {loading && (
                 <div className="flex items-center justify-center py-16 text-saffron/70">
                   <motion.div
@@ -419,6 +424,7 @@ export function DailyWisdomModal({
                   </div>
                 </>
               )}
+              </div>
             </div>
           </motion.div>
 
