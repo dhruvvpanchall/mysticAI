@@ -266,7 +266,7 @@ export function DailyWisdomModal({
                   </span>
                   <div className="leading-tight">
                     <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-saffron/80">
-                      Today's Wisdom
+                      Today&rsquo;s Wisdom
                     </div>
                     <div className="text-[11px] text-white/55">
                       {lesson
@@ -292,7 +292,7 @@ export function DailyWisdomModal({
 
               {!loading && !lesson && (
                 <p className="py-12 text-center text-sm text-white/70">
-                  You've completed every lesson available right now (
+                  You&rsquo;ve completed every lesson available right now (
                   {totalLessons()} verses). More verses are on the way.
                 </p>
               )}
