@@ -9,11 +9,13 @@ import {
   ShieldCheck,
   Languages,
   Menu,
+  Plus,
 } from "lucide-react";
 import { Sidebar, type SidebarConversation } from "@/components/chat/Sidebar";
 import { ModelDropdown } from "@/components/chat/ModelDropdown";
 import { BrandLockup, BrandMark } from "@/components/BrandMark";
 import { SidebarDailyPractice } from "@/components/today/SidebarDailyPractice";
+import { MobileWisdomChip } from "@/components/today/MobileWisdomChip";
 import { useAuth } from "@/lib/auth";
 import {
   appendMessage as fsAppendMessage,
@@ -821,29 +823,37 @@ export default function ChatPage() {
 
       {/* Main column */}
       <div className="relative z-10 flex min-w-0 flex-1 flex-col">
-        {/* Mobile-only top bar — desktop sidebar carries the brand. */}
+        {/* Mobile-only top bar — desktop sidebar carries the brand.
+            On mobile the daily ritual is otherwise hidden behind the
+            drawer, so the wisdom chip sits prominently in the header. */}
         <header
-          className="flex items-center justify-between border-b border-parchment-muted bg-parchment/80 px-3 py-2.5 backdrop-blur-sm sm:px-5 lg:hidden"
+          className="flex items-center justify-between gap-2 border-b border-parchment-muted bg-parchment/80 px-3 py-2.5 backdrop-blur-sm sm:px-5 lg:hidden"
           style={{ paddingTop: "max(0.6rem, env(safe-area-inset-top))" }}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <button
               onClick={() => setSidebarOpen(true)}
               aria-label="Open menu"
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-parchment-muted bg-parchment text-ink-soft transition-colors hover:border-maroon/40 hover:text-maroon"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-parchment-muted bg-parchment text-ink-soft transition-colors hover:border-maroon/40 hover:text-maroon"
             >
               <Menu size={18} />
             </button>
             <BrandLockup size="sm" surface="light" />
           </div>
 
-          <button
-            onClick={() => startNewConversation()}
-            aria-label="New conversation"
-            className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-parchment-muted bg-parchment px-3 text-sm text-ink-soft transition-colors hover:border-maroon/40 hover:text-maroon"
-          >
-            New
-          </button>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <MobileWisdomChip
+              uid={user.id}
+              onAskMystic={(seed) => send(seed)}
+            />
+            <button
+              onClick={() => startNewConversation()}
+              aria-label="New conversation"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-parchment-muted bg-parchment text-ink-soft transition-colors hover:border-maroon/40 hover:text-maroon"
+            >
+              <Plus size={18} />
+            </button>
+          </div>
         </header>
 
         {/* Conversation */}
