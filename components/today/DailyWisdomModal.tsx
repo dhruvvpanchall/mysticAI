@@ -9,7 +9,6 @@ import {
   Quote,
   CheckCircle2,
   MessageSquareText,
-  Volume2,
   BookHeart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,8 +25,7 @@ import {
   type Lesson,
   type StreakState,
 } from "@/lib/practice/types";
-import { EmotionPicker } from "./EmotionPicker";
-import { ReflectionInput } from "./ReflectionInput";
+import { HindiVoicePlayer } from "./HindiVoicePlayer";
 
 interface Props {
   open: boolean;
@@ -54,8 +52,8 @@ type LangTab = "english" | "hindi";
 
 /**
  * Premium "Today's Wisdom" modal — opens from the sidebar entry.
- * Centered glassmorphism card with full verse content, emotion picker,
- * reflection journal, and explicit "Mark Complete" CTA.
+ * Centered glassmorphism card with full verse content, a Hindi voice
+ * narration strip, chat bridge CTAs, and an explicit "Mark Complete".
  *
  * Close-without-complete flow:
  *   user dismisses → confirmation overlay → "Completed" | "Coming back".
@@ -336,6 +334,9 @@ export function DailyWisdomModal({
                     {lang === "english" ? lesson.english : lesson.hindi}
                   </p>
 
+                  {/* Hindi voice playback */}
+                  <HindiVoicePlayer lesson={lesson} />
+
                   {/* AI explanation */}
                   <div className="mt-6 rounded-xl border border-saffron/15 bg-white/[0.025] p-4 sm:p-5">
                     <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-saffron/80">
@@ -388,26 +389,8 @@ export function DailyWisdomModal({
                           {p.label}
                         </button>
                       ))}
-                      <button
-                        disabled
-                        title="Voice recitation coming soon"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-xs text-white/35"
-                      >
-                        <Volume2 size={14} />
-                        Listen
-                      </button>
                     </div>
                   )}
-
-                  {/* Emotion picker */}
-                  <EmotionPicker verseRef={lesson.ref} />
-
-                  {/* Reflection */}
-                  <ReflectionInput
-                    uid={uid}
-                    verseRef={lesson.ref}
-                    prompt={lesson.reflection}
-                  />
 
                   {/* Mark complete */}
                   <div className="mt-7 flex flex-col items-stretch gap-3 border-t border-white/5 pt-5 sm:flex-row sm:items-center sm:justify-between">
