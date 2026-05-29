@@ -87,33 +87,33 @@ export function SidebarDailyPractice({
       {/* Today's Wisdom — the prominent CTA */}
       <button
         onClick={() => setWisdomOpen(true)}
-        className="group relative w-full overflow-hidden rounded-2xl border border-saffron/40 bg-gradient-to-br from-[#1a0f24] via-[#150d20] to-[#1a1024] p-3.5 text-left shadow-[0_8px_24px_-12px_rgba(244,165,42,0.5)] transition-all hover:border-saffron/60 hover:shadow-[0_10px_30px_-10px_rgba(244,165,42,0.65)]"
+        className="group relative w-full overflow-hidden rounded-2xl border border-saffron/50 bg-gradient-to-br from-saffron-50 via-parchment to-saffron-50/70 p-3.5 text-left shadow-[0_6px_18px_-10px_rgba(122,31,31,0.35)] transition-all hover:border-maroon/40 hover:shadow-[0_10px_24px_-10px_rgba(122,31,31,0.45)]"
       >
-        {/* Pulsing halo */}
+        {/* Soft pulsing halo — warm saffron bloom */}
         <motion.div
           aria-hidden
-          animate={{ opacity: [0.55, 0.95, 0.55] }}
+          animate={{ opacity: [0.4, 0.75, 0.4] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-saffron/35 blur-2xl"
+          className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-saffron/40 blur-2xl"
         />
         <div className="relative flex items-center gap-3">
-          <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-saffron/40 bg-saffron/15">
+          <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-saffron/60 bg-gradient-to-br from-saffron to-[#e08a1f] shadow-[0_4px_10px_-4px_rgba(244,165,42,0.65)]">
             <motion.span
               aria-hidden
-              animate={{ scale: [1, 1.35, 1], opacity: [0.5, 0, 0.5] }}
+              animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
               transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
-              className="absolute inset-0 rounded-xl border border-saffron/50"
+              className="absolute inset-0 rounded-xl border border-saffron"
             />
-            <Sparkles size={15} className="text-saffron" />
+            <Sparkles size={15} className="text-parchment drop-shadow" />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-saffron/90">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-maroon">
               Today's Wisdom
               {!completedToday && (
-                <span className="inline-flex h-1.5 w-1.5 animate-pulse rounded-full bg-saffron" />
+                <span className="inline-flex h-1.5 w-1.5 animate-pulse rounded-full bg-maroon" />
               )}
             </div>
-            <div className="mt-0.5 truncate text-[12px] text-white/65">
+            <div className="mt-0.5 truncate text-[12.5px] font-medium text-ink">
               {lesson
                 ? `Day ${dayNumber} · Verse ${lesson.ref}`
                 : "Loading…"}
@@ -121,17 +121,17 @@ export function SidebarDailyPractice({
           </div>
           <ChevronRight
             size={15}
-            className="shrink-0 text-saffron/55 transition-transform group-hover:translate-x-0.5"
+            className="shrink-0 text-maroon/70 transition-transform group-hover:translate-x-0.5"
           />
         </div>
         {!completedToday && (
-          <div className="relative mt-2 text-[10.5px] uppercase tracking-[0.16em] text-saffron/65">
+          <div className="relative mt-2 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-maroon/80">
             Tap to begin
           </div>
         )}
         {completedToday && (
-          <div className="relative mt-2 text-[10.5px] uppercase tracking-[0.16em] text-saffron/50">
-            Completed today
+          <div className="relative mt-2 inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">
+            ✓ Completed today
           </div>
         )}
       </button>
@@ -139,23 +139,23 @@ export function SidebarDailyPractice({
       {/* Streak chip — quieter secondary row */}
       <button
         onClick={() => setStreakOpen(true)}
-        className="group flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[0.025] p-3 text-left transition-colors hover:border-saffron/40 hover:bg-saffron/10"
+        className="group flex w-full items-center gap-3 rounded-xl border border-parchment-muted bg-parchment p-3 text-left transition-colors hover:border-saffron/50 hover:bg-saffron-50"
       >
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] text-saffron">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-saffron/40 bg-saffron-50 text-maroon">
           <Flame size={15} />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/55">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
             Your Streak
           </div>
-          <div className="mt-0.5 text-[12px] text-white/80">
+          <div className="mt-0.5 text-[12.5px] font-medium text-ink">
             🔥 {streak.current}{" "}
             {streak.current === 1 ? "day" : "days"} · {rank.label}
           </div>
         </div>
         <ChevronRight
           size={15}
-          className="shrink-0 text-white/40 transition-transform group-hover:translate-x-0.5"
+          className="shrink-0 text-ink-muted transition-transform group-hover:translate-x-0.5"
         />
       </button>
 
