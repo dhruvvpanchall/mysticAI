@@ -79,16 +79,21 @@ export function HindiVoicePlayer({ lesson }: Props) {
   }, [lesson.ref]);
 
   function buildScript(): string {
-    // Hindi narration weaves through Sanskrit + Hindi translation with
-    // small connector phrases. Pure Hindi content only — English
-    // explanations are skipped here so the Hindi voice doesn't mangle
-    // English vocabulary.
+    // Full Hindi narration of the day's lesson: chapter intro, the
+    // Sanskrit shloka, its Hindi translation, the editorial reading
+    // ("what Krishna is teaching"), the modern-life application, and
+    // a short closing chintan. Everything in Devanagari so the Hindi
+    // voice never has to wrestle with English vocabulary.
     return [
       `आज की दैनिक शिक्षा। भगवद गीता, अध्याय ${lesson.chapter}, श्लोक ${lesson.verse}।`,
       `पहले श्लोक सुनिए।`,
       lesson.sanskrit,
       `अब इस श्लोक का हिंदी अर्थ।`,
       lesson.hindi,
+      `यहाँ कृष्ण क्या सिखा रहे हैं।`,
+      lesson.hindiExplanation,
+      `और आधुनिक जीवन में इसका अर्थ।`,
+      lesson.hindiModernLife,
       `यही आज का चिंतन है। शांति से इस पर मनन कीजिए।`,
     ].join(" ");
   }
@@ -190,8 +195,21 @@ export function HindiVoicePlayer({ lesson }: Props) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-saffron/85">
-            Listen in Hindi
+          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-saffron/85">
+            <span>Listen in Hindi</span>
+            {hindiVoice && (
+              <span
+                className={
+                  "rounded-full border px-1.5 py-px text-[9px] font-medium normal-case tracking-normal " +
+                  (voiceIsMale
+                    ? "border-saffron/40 bg-saffron/10 text-saffron/90"
+                    : "border-white/15 bg-white/[0.04] text-white/55")
+                }
+                title={voiceIsMale ? "Male Hindi voice active" : "Install a male Hindi voice for the intended narration"}
+              >
+                {voiceIsMale ? "♂ male" : "default"}
+              </span>
+            )}
           </div>
           <div className="mt-0.5 text-[12.5px] text-white/70">
             {status === "playing"
@@ -202,7 +220,9 @@ export function HindiVoicePlayer({ lesson }: Props) {
                   ? "तैयारी हो रही है…"
                   : noHindiVoice
                     ? "हिंदी आवाज़ इंस्टॉल नहीं है, सिस्टम की आवाज़ चलेगी।"
-                    : "श्लोक और उसका अर्थ हिंदी में सुनें।"}
+                    : voiceIsMale
+                      ? "श्लोक, अर्थ और मनन हिंदी में सुनें।"
+                      : "श्लोक और अर्थ हिंदी में सुनें। पुरुष आवाज़ के लिए Microsoft Hemant इंस्टॉल कीजिए।"}
           </div>
         </div>
 

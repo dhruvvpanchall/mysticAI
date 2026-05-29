@@ -27,8 +27,12 @@ export interface Lesson {
   english: string;
   /** 2-3 sentences naming what this verse teaches, calmly and humanly. */
   aiExplanation: string;
+  /** Hindi (Devanagari) version of aiExplanation, used by the voice player. */
+  hindiExplanation: string;
   /** 2-3 sentences applying the verse to daily modern life. */
   modernLife: string;
+  /** Hindi (Devanagari) version of modernLife, used by the voice player. */
+  hindiModernLife: string;
   /** One thoughtful question for the seeker to sit with today. */
   reflection: string;
 }
