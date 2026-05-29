@@ -23,23 +23,42 @@ type Status = "idle" | "loading" | "playing" | "paused";
 export function HindiVoicePlayer({ lesson }: Props) {
   const [status, setStatus] = React.useState<Status>("idle");
   const [hindiVoice, setHindiVoice] = React.useState<SpeechSynthesisVoice | null>(null);
+  const [voiceIsMale, setVoiceIsMale] = React.useState(false);
   const [voiceReady, setVoiceReady] = React.useState(false);
   const utteranceRef = React.useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Resolve the best Hindi voice on the device. Voices load async on
-  // some browsers, so we subscribe to onvoiceschanged too.
+  // Resolve the best Hindi voice on the device, preferring a male
+  // narrator. The Web Speech API doesn't expose a gender property in
+  // any cross-browser way, so we lean on known male voice names that
+  // ship with major platforms (Microsoft Hemant on Windows, Google
+  // hi-IN male on Chrome). Falls back to any Hindi voice, then to
+  // null so the engine uses the system default.
   React.useEffect(() => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       setVoiceReady(true);
       return;
     }
+    const MALE_HINDI_HINTS = [
+      "hemant",
+      "madhur",
+      "ravi",
+      "aditya",
+      "rishi",
+      "male",
+    ];
     function pick() {
       const voices = window.speechSynthesis.getVoices();
-      const hi =
-        voices.find((v) => v.lang === "hi-IN") ??
-        voices.find((v) => v.lang.toLowerCase().startsWith("hi")) ??
-        null;
-      setHindiVoice(hi);
+      const hindiVoices = voices.filter((v) =>
+        v.lang.toLowerCase().startsWith("hi")
+      );
+      const maleHi = hindiVoices.find((v) => {
+        const n = v.name.toLowerCase();
+        return MALE_HINDI_HINTS.some((hint) => n.includes(hint));
+      });
+      const fallbackHi = hindiVoices.find((v) => v.lang === "hi-IN") ?? hindiVoices[0];
+      const chosen = maleHi ?? fallbackHi ?? null;
+      setHindiVoice(chosen);
+      setVoiceIsMale(Boolean(maleHi));
       setVoiceReady(true);
     }
     pick();
@@ -85,8 +104,11 @@ export function HindiVoicePlayer({ lesson }: Props) {
     const u = new SpeechSynthesisUtterance(buildScript());
     u.lang = "hi-IN";
     if (hindiVoice) u.voice = hindiVoice;
-    u.rate = 0.92;
-    u.pitch = 1.0;
+    u.rate = 0.9;
+    // Keep a true male voice at neutral pitch; nudge fallback voices
+    // downward so a default female voice still reads in a warmer,
+    // teacher-like register.
+    u.pitch = voiceIsMale ? 0.98 : 0.8;
     u.onend = () => setStatus("idle");
     u.onerror = () => setStatus("idle");
     utteranceRef.current = u;
