@@ -9,10 +9,13 @@ import {
   ShieldCheck,
   Languages,
   Menu,
+  Plus,
 } from "lucide-react";
 import { Sidebar, type SidebarConversation } from "@/components/chat/Sidebar";
 import { ModelDropdown } from "@/components/chat/ModelDropdown";
 import { BrandLockup, BrandMark } from "@/components/BrandMark";
+import { SidebarDailyPractice } from "@/components/today/SidebarDailyPractice";
+import { MobileWisdomChip } from "@/components/today/MobileWisdomChip";
 import { useAuth } from "@/lib/auth";
 import {
   appendMessage as fsAppendMessage,
@@ -266,7 +269,6 @@ export default function ChatPage() {
   const [streaming, setStreaming] = React.useState(false);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [hydrated, setHydrated] = React.useState(false);
-
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const taRef = React.useRef<HTMLTextAreaElement>(null);
   // In-flight Firestore conversation creates, keyed by their optimistic
@@ -342,12 +344,10 @@ export default function ChatPage() {
           localStorage.getItem(MODEL_KEY(user.id))
         );
         setModel(savedModel);
-        const savedActive = localStorage.getItem(ACTIVE_KEY(user.id));
-        const stillExists = convs.find(
-          (c) => c.id === savedActive && c.model === savedModel
-        );
-        const fallback = convs.find((c) => c.model === savedModel);
-        setActiveId(stillExists ? savedActive : fallback?.id ?? null);
+        // Always reopen to a fresh conversation surface (empty state) so
+        // the seeker re-enters into a new chat rather than resuming the
+        // last thread. Previous conversations stay in the sidebar.
+        setActiveId(null);
       } catch (err) {
         console.error("[chat] failed to load conversations:", err);
       } finally {
@@ -359,13 +359,18 @@ export default function ChatPage() {
     };
   }, [user]);
 
-  // Active conversation id is pure UI state — kept in localStorage so a
-  // page refresh lands on the same thread the seeker was reading.
+  // Note: activeId is NOT persisted across reloads — per product
+  // direction, every reopen lands in a fresh empty-state chat. The
+  // ACTIVE_KEY localStorage entry from earlier builds is cleared on
+  // load so old values don't linger.
   React.useEffect(() => {
-    if (!user || !hydrated) return;
-    if (activeId) localStorage.setItem(ACTIVE_KEY(user.id), activeId);
-    else localStorage.removeItem(ACTIVE_KEY(user.id));
-  }, [user, hydrated, activeId]);
+    if (!user) return;
+    try {
+      localStorage.removeItem(ACTIVE_KEY(user.id));
+    } catch {
+      // ignore
+    }
+  }, [user]);
 
   // Persist the active scripture per user, so a refresh lands the seeker
   // in the same model they were in.
@@ -805,33 +810,50 @@ export default function ChatPage() {
         }}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        topSlot={
+          <SidebarDailyPractice
+            uid={user.id}
+            onAskMystic={(seed) => {
+              setSidebarOpen(false);
+              send(seed);
+            }}
+          />
+        }
       />
 
       {/* Main column */}
       <div className="relative z-10 flex min-w-0 flex-1 flex-col">
-        {/* Mobile-only top bar — desktop sidebar carries the brand. */}
+        {/* Mobile-only top bar — desktop sidebar carries the brand.
+            On mobile the daily ritual is otherwise hidden behind the
+            drawer, so the wisdom chip sits prominently in the header. */}
         <header
-          className="flex items-center justify-between border-b border-parchment-muted bg-parchment/80 px-3 py-2.5 backdrop-blur-sm sm:px-5 lg:hidden"
+          className="flex items-center justify-between gap-2 border-b border-parchment-muted bg-parchment/80 px-3 py-2.5 backdrop-blur-sm sm:px-5 lg:hidden"
           style={{ paddingTop: "max(0.6rem, env(safe-area-inset-top))" }}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <button
               onClick={() => setSidebarOpen(true)}
               aria-label="Open menu"
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-parchment-muted bg-parchment text-ink-soft transition-colors hover:border-maroon/40 hover:text-maroon"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-parchment-muted bg-parchment text-ink-soft transition-colors hover:border-maroon/40 hover:text-maroon"
             >
               <Menu size={18} />
             </button>
             <BrandLockup size="sm" surface="light" />
           </div>
 
-          <button
-            onClick={() => startNewConversation()}
-            aria-label="New conversation"
-            className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-parchment-muted bg-parchment px-3 text-sm text-ink-soft transition-colors hover:border-maroon/40 hover:text-maroon"
-          >
-            New
-          </button>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <MobileWisdomChip
+              uid={user.id}
+              onAskMystic={(seed) => send(seed)}
+            />
+            <button
+              onClick={() => startNewConversation()}
+              aria-label="New conversation"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-parchment-muted bg-parchment text-ink-soft transition-colors hover:border-maroon/40 hover:text-maroon"
+            >
+              <Plus size={18} />
+            </button>
+          </div>
         </header>
 
         {/* Conversation */}
