@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   MessageSquareText,
   BookHeart,
+  Languages,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -316,26 +317,8 @@ export function DailyWisdomModal({
                     {lesson.transliteration}
                   </p>
 
-                  {/* Lang tabs */}
-                  <div className="mt-5 flex justify-center gap-1.5">
-                    {(["english", "hindi"] as LangTab[]).map((l) => (
-                      <button
-                        key={l}
-                        onClick={() => setLang(l)}
-                        className={cn(
-                          "rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors",
-                          lang === l
-                            ? "bg-saffron text-[#120a1d]"
-                            : "text-white/40 hover:text-white/70"
-                        )}
-                      >
-                        {l === "english" ? "English" : "हिन्दी"}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Translation */}
-                  <p className="mx-auto mt-3 max-w-2xl text-center text-[15px] leading-relaxed text-white/85 sm:text-base">
+                  {/* Translation — switches with the toggle below */}
+                  <p className="mx-auto mt-5 max-w-2xl text-center text-[15px] leading-relaxed text-white/85 sm:text-base">
                     {lang === "english" ? lesson.english : lesson.hindi}
                   </p>
 
@@ -347,8 +330,13 @@ export function DailyWisdomModal({
                     <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-saffron/80">
                       What Krishna is teaching here
                     </div>
-                    <p className="mt-2 text-[14px] leading-relaxed text-white/85">
-                      {lesson.aiExplanation}
+                    <p
+                      className="mt-2 text-[14px] leading-relaxed text-white/85"
+                      lang={lang === "hindi" ? "hi" : "en"}
+                    >
+                      {lang === "english"
+                        ? lesson.aiExplanation
+                        : lesson.hindiExplanation}
                     </p>
                   </div>
 
@@ -357,9 +345,42 @@ export function DailyWisdomModal({
                     <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-saffron/80">
                       How this applies in modern life
                     </div>
-                    <p className="mt-2 text-[14px] leading-relaxed text-white/85">
-                      {lesson.modernLife}
+                    <p
+                      className="mt-2 text-[14px] leading-relaxed text-white/85"
+                      lang={lang === "hindi" ? "hi" : "en"}
+                    >
+                      {lang === "english"
+                        ? lesson.modernLife
+                        : lesson.hindiModernLife}
                     </p>
+                  </div>
+
+                  {/* Language toggle — controls the verse translation
+                      and both reading cards above. Sits here so the
+                      seeker reads the lesson once, then chooses to
+                      switch the whole thing into Hindi. */}
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2 rounded-xl border border-saffron/20 bg-gradient-to-r from-saffron/[0.06] via-white/[0.02] to-saffron/[0.06] px-3 py-2.5">
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-saffron/85">
+                      <Languages size={13} className="text-saffron/80" />
+                      Read in
+                    </span>
+                    <div className="flex gap-1 rounded-full border border-white/10 bg-white/[0.04] p-0.5">
+                      {(["english", "hindi"] as LangTab[]).map((l) => (
+                        <button
+                          key={l}
+                          onClick={() => setLang(l)}
+                          aria-pressed={lang === l}
+                          className={cn(
+                            "rounded-full px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] transition-all",
+                            lang === l
+                              ? "bg-saffron text-[#120a1d] shadow-[0_2px_8px_-2px_rgba(244,165,42,0.7)]"
+                              : "text-white/55 hover:text-white/85"
+                          )}
+                        >
+                          {l === "english" ? "English" : "हिन्दी"}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Streak strip */}
