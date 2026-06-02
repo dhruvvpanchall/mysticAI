@@ -33,7 +33,7 @@ export function MessageVoicePlayer({
   isTranslating,
   onRequestTranslation,
 }: Props) {
-  const { status, voiceInfo, ready, supported, play, pause, resume, stop } =
+  const { status, voiceInfo, supported, play, pause, resume, stop } =
     useHindiVoice();
   const [pendingPlay, setPendingPlay] = React.useState(false);
 
@@ -56,7 +56,12 @@ export function MessageVoicePlayer({
 
   if (!supported) return null;
 
-  const noVoice = ready && !voiceInfo;
+  // Note: we deliberately do NOT disable the button when no Hindi voice
+  // was detected. iOS Safari's getVoices() is flaky — even when Hindi
+  // voices ARE installed, it can report none for the first few seconds
+  // and never fire voiceschanged. Letting the engine attempt playback
+  // with lang=hi-IN and the system default is better UX than a
+  // permanently grayed-out button.
   const playing = status === "playing";
   const paused = status === "paused";
   const busy = status === "loading" || (pendingPlay && isTranslating);
@@ -80,17 +85,15 @@ export function MessageVoicePlayer({
         ? "Loading"
         : "Listen";
 
-  const tooltip = noVoice
-    ? "No Hindi voice installed on this device"
-    : voiceInfo
-      ? `${label} in Hindi (${voiceInfo.isMale ? "male" : "default"} voice)`
-      : label;
+  const tooltip = voiceInfo
+    ? `${label} in Hindi (${voiceInfo.isMale ? "male" : "default"} voice)`
+    : label;
 
   return (
     <span className="inline-flex items-center gap-1">
       <button
         onClick={handlePrimary}
-        disabled={busy || noVoice}
+        disabled={busy}
         aria-label={tooltip}
         title={tooltip}
         className={cn(

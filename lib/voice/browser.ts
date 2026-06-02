@@ -35,9 +35,13 @@ export class BrowserVoiceProvider implements VoiceProvider {
     if (this.readyPromise) return this.readyPromise;
 
     this.readyPromise = new Promise<void>((resolve) => {
-      const pick = () => {
+      const TOTAL_TIMEOUT_MS = 5000;
+      const POLL_INTERVAL_MS = 200;
+      const started = Date.now();
+
+      const tryPick = (): boolean => {
         const voices = window.speechSynthesis.getVoices();
-        if (voices.length === 0) return;
+        if (voices.length === 0) return false;
         const hindi = voices.filter((v) =>
           v.lang.toLowerCase().startsWith("hi")
         );
@@ -49,19 +53,28 @@ export class BrowserVoiceProvider implements VoiceProvider {
           hindi.find((v) => v.lang === "hi-IN") ?? hindi[0] ?? null;
         this.voice = male ?? fallback;
         this.isMale = Boolean(male);
-        window.speechSynthesis.removeEventListener("voiceschanged", pick);
-        resolve();
+        return true;
       };
-      pick();
-      if (window.speechSynthesis.getVoices().length === 0) {
-        window.speechSynthesis.addEventListener("voiceschanged", pick);
-        // Some browsers never fire voiceschanged if voices were never going
-        // to load. Resolve after a generous timeout so the UI doesn't hang.
-        setTimeout(() => {
-          window.speechSynthesis.removeEventListener("voiceschanged", pick);
-          resolve();
-        }, 2500);
+
+      if (tryPick()) {
+        resolve();
+        return;
       }
+
+      // Poll. iOS Safari often does NOT fire voiceschanged at all, and
+      // getVoices() returns empty until the system finishes loading the
+      // voice manifest. Polling is the only reliable detector on iOS.
+      const pollId = window.setInterval(() => {
+        if (tryPick()) {
+          window.clearInterval(pollId);
+          resolve();
+        } else if (Date.now() - started > TOTAL_TIMEOUT_MS) {
+          window.clearInterval(pollId);
+          // Give up gracefully — speak() will still try with lang=hi-IN
+          // and the engine picks whatever default it has.
+          resolve();
+        }
+      }, POLL_INTERVAL_MS);
     });
     return this.readyPromise;
   }
@@ -78,7 +91,7 @@ export class BrowserVoiceProvider implements VoiceProvider {
     }
     window.speechSynthesis.cancel();
 
-    const u = new SpeechSynthesisUtterance(text);
+    const u = new SpeechSynthesisUtterance(sanitizeForHindiSpeech(text));
     u.lang = "hi-IN";
     if (this.voice) u.voice = this.voice;
     u.rate = 0.9;
@@ -115,3 +128,25 @@ const NOOP_HANDLE: VoiceHandle = {
   resume: () => {},
   stop: () => {},
 };
+
+/**
+ * Strip punctuation iOS Safari's Hindi voices read literally instead of
+ * interpreting as pauses. The bug surfaces as the narration saying
+ * "comma 1 comma 5 comma comma dash" because Latin punctuation embedded
+ * in Hindi text is vocalized verbatim by the engine. Convert problematic
+ * punctuation to whitespace; leave the Devanagari danda (।) which the
+ * engine handles correctly. Numbers stay as digits — the engine reads
+ * them as numerals, not as "comma N comma".
+ *
+ * Applied at the speech-utterance boundary so the narration scripts
+ * (lib/voice/script.ts) stay semantically clean and only the playback
+ * adapter knows about engine quirks.
+ */
+function sanitizeForHindiSpeech(text: string): string {
+  return text
+    .replace(/[,;:]/g, " ")
+    .replace(/[-–—]/g, " ")
+    .replace(/(\d)\.(\d)/g, "$1 $2")
+    .replace(/\s+/g, " ")
+    .trim();
+}
