@@ -226,7 +226,17 @@ export function DailyWisdomModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 p-3 backdrop-blur-md sm:p-6"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 backdrop-blur-md"
+          // iOS safe-area aware padding so the modal never hides under the
+          // notch or home indicator on iPhone XR / 11 / 12+ / 14 Pro etc.
+          // Falls back to a clean 12px gap on devices without insets.
+          style={{
+            paddingTop: "max(0.75rem, calc(env(safe-area-inset-top) + 0.75rem))",
+            paddingBottom:
+              "max(0.75rem, calc(env(safe-area-inset-bottom) + 0.75rem))",
+            paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
+            paddingRight: "max(0.75rem, env(safe-area-inset-right))",
+          }}
           onClick={attemptClose}
         >
           <motion.div
@@ -235,7 +245,14 @@ export function DailyWisdomModal({
             exit={{ opacity: 0, scale: 0.97, y: 6 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="relative flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-saffron/25 bg-gradient-to-br from-[#120a1d] via-[#0e0a18] to-[#180f1f] shadow-[0_30px_80px_-30px_rgba(244,165,42,0.5),0_0_0_1px_rgba(244,165,42,0.05)_inset]"
+            // dvh (dynamic viewport height) handles iOS Safari's collapsing
+            // address bar; subtracting safe-area insets + the 12px gap each
+            // side guarantees the card stops short of both edges.
+            style={{
+              maxHeight:
+                "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem)",
+            }}
+            className="relative flex w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-saffron/25 bg-gradient-to-br from-[#120a1d] via-[#0e0a18] to-[#180f1f] shadow-[0_30px_80px_-30px_rgba(244,165,42,0.5),0_0_0_1px_rgba(244,165,42,0.05)_inset]"
           >
             {/* Ambient halos — sit on the static shell, not the scroll area */}
             <div

@@ -92,3 +92,7 @@ export const TRANSLATE_LIMIT: LimiterConfig = {
   capacity: 30,           // translations are per-message; allow a brisk re-render
   refillPerSecond: 30 / 60,
 };
+export const TRANSCRIBE_LIMIT: LimiterConfig = {
+  capacity: 20,           // 20 short utterances in burst, then ~1/4s steady
+  refillPerSecond: 20 / 60,
+};

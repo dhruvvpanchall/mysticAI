@@ -13,10 +13,13 @@ import {
 } from "lucide-react";
 import { Sidebar, type SidebarConversation } from "@/components/chat/Sidebar";
 import { ModelDropdown } from "@/components/chat/ModelDropdown";
+import { MessageVoicePlayer } from "@/components/chat/MessageVoicePlayer";
+import { MicButton } from "@/components/chat/MicButton";
 import { BrandLockup, BrandMark } from "@/components/BrandMark";
 import { SidebarDailyPractice } from "@/components/today/SidebarDailyPractice";
 import { MobileWisdomChip } from "@/components/today/MobileWisdomChip";
 import { useAuth } from "@/lib/auth";
+import { detectLang } from "@/lib/i18n";
 import {
   appendMessage as fsAppendMessage,
   createConversation as fsCreateConversation,
@@ -69,7 +72,20 @@ interface Message {
   content: string;
   translations?: Partial<Record<Lang, string>>;
   displayLang?: Lang;
+  /** Pill-triggered translation in flight. Drives the spinner *and* the
+   *  disabled state on the language pill. Set when the seeker clicked
+   *  the pill — i.e. when the displayed language is being changed. */
   translating?: Lang | null;
+  /** Voice-triggered translation in flight. Drives the voice player's
+   *  spinner but NOT the pill's. The pill is still disabled while this
+   *  is set so a quick double-tap (Listen then pill) can't fire two
+   *  parallel /api/translate requests for the same message. */
+  voiceTranslating?: Lang | null;
+  /** Language the `content` was authored in. Assistant replies adopt the
+   *  language the seeker wrote in (see /api/chat language directive), so
+   *  this is set once per assistant turn after streaming completes.
+   *  Legacy messages without the field are treated as English. */
+  contentLang?: Lang;
 }
 
 interface Conversation {
@@ -93,10 +109,10 @@ const LANG_LABEL: Record<Exclude<Lang, "en">, string> = {
  *  the seeker is about to ask. */
 const STARTERS: Record<ScriptureId, string[]> = {
   gita: [
+    "I have a decision to make and I don't know which way to lean.",
+    "How do I find purpose in what I do each day?",
     "I'm overwhelmed and stressed about work.",
-    "How do I deal with anger I can't control?",
-    "I lost someone I love. How do I carry this grief?",
-    "My mind never stops racing. How do I find stillness?",
+    "How do I love the people in my life without losing myself?",
   ],
   ramayana: [
     "I have to choose between what's right and what I want.",
@@ -135,6 +151,19 @@ function isValidTranslation(
   const srcLen = Math.max(source.length, 30);
   if (text.length < srcLen * 0.5) return false;
   if (text.length > srcLen * 3 + 200) return false;
+  // Question → statement guard. If the source is a question (ends with "?"
+  // or opens with an interrogative word) but the output has no question
+  // mark, the LLM probably answered instead of translating ("How's your
+  // day going?" → "मेरा दिन अच्छा चल रहा है"). Evict so a fresh fetch
+  // can replace it.
+  if (lang === "hi") {
+    const srcHasQuestion =
+      /[?？]/.test(source) ||
+      /^\s*(?:how|what|when|where|why|who|which|whom|whose|are|is|do|does|did|can|could|will|would|should|may|might)\b/i.test(
+        source.trim()
+      );
+    if (srcHasQuestion && !/[?？]/.test(text)) return false;
+  }
   return true;
 }
 
@@ -332,6 +361,7 @@ export default function ChatPage() {
               role: m.role,
               content: m.content,
               translations,
+              contentLang: m.contentLang,
             };
           }),
         }));
@@ -639,11 +669,21 @@ export default function ChatPage() {
       setStreaming(false);
       // Persist the assistant message ONCE, after streaming completes —
       // writing every chunk would explode Firestore writes for no UX gain.
+      // contentLang is stamped here so a reload knows which language the
+      // reply was authored in (drives default pill highlight + lets the
+      // voice player skip translation when the reply is already Hindi).
       if (finalContent) {
+        const contentLang = detectLang(finalContent);
+        setMessages(conversationId, (msgs) =>
+          msgs.map((msg) =>
+            msg.id === assistantId ? { ...msg, contentLang } : msg
+          )
+        );
         fsAppendMessage(user.id, conversationId, {
           id: assistantId,
           role: "assistant",
           content: finalContent,
+          contentLang,
           createdAt: Date.now(),
         }).catch((err) =>
           console.error("[chat] appendMessage(assistant) failed:", err)
@@ -655,23 +695,49 @@ export default function ChatPage() {
   async function translate(
     conversationId: string,
     messageId: string,
-    lang: Exclude<Lang, "en">
+    lang: Exclude<Lang, "en">,
+    options: { setDisplay?: boolean } = {}
   ) {
+    // `setDisplay` defaults to true — pill clicks naturally want the
+    // displayed text to switch. The voice player passes false so that
+    // tapping Listen translates and plays Hindi audio without flipping
+    // the visible text away from what the seeker is reading.
+    const setDisplay = options.setDisplay ?? true;
+    // Voice-triggered fetches drive a separate `voiceTranslating` flag
+    // so the language pill's spinner doesn't light up when the seeker
+    // never asked to change languages — they just asked to listen.
+    const flightField: "translating" | "voiceTranslating" = setDisplay
+      ? "translating"
+      : "voiceTranslating";
     if (!user) return;
     const conv = conversations.find((c) => c.id === conversationId);
     const msg = conv?.messages.find((m) => m.id === messageId);
     if (!msg || msg.role !== "assistant" || !msg.content) return;
+    // Content already in the target language — no LLM call needed.
+    // Only flip displayLang when the caller wants it.
+    if (msg.contentLang === lang) {
+      if (setDisplay) {
+        setMessages(conversationId, (msgs) =>
+          msgs.map((m) =>
+            m.id === messageId ? { ...m, displayLang: lang } : m
+          )
+        );
+      }
+      return;
+    }
     if (msg.translations?.[lang]) {
-      setMessages(conversationId, (msgs) =>
-        msgs.map((m) =>
-          m.id === messageId ? { ...m, displayLang: lang } : m
-        )
-      );
+      if (setDisplay) {
+        setMessages(conversationId, (msgs) =>
+          msgs.map((m) =>
+            m.id === messageId ? { ...m, displayLang: lang } : m
+          )
+        );
+      }
       return;
     }
     setMessages(conversationId, (msgs) =>
       msgs.map((m) =>
-        m.id === messageId ? { ...m, translating: lang } : m
+        m.id === messageId ? { ...m, [flightField]: lang } : m
       )
     );
     let finalTranslation = "";
@@ -695,7 +761,7 @@ export default function ChatPage() {
               ? {
                   ...m,
                   translations: { ...(m.translations ?? {}), [lang]: acc },
-                  displayLang: lang,
+                  ...(setDisplay ? { displayLang: lang } : {}),
                 }
               : m
           )
@@ -713,7 +779,7 @@ export default function ChatPage() {
                   ...(m.translations ?? {}),
                   [lang]: finalTranslation,
                 },
-                displayLang: lang,
+                ...(setDisplay ? { displayLang: lang } : {}),
               }
             : m
         )
@@ -721,7 +787,7 @@ export default function ChatPage() {
     } finally {
       setMessages(conversationId, (msgs) =>
         msgs.map((m) =>
-          m.id === messageId ? { ...m, translating: null } : m
+          m.id === messageId ? { ...m, [flightField]: null } : m
         )
       );
       // Persist the cached translation on the message so reloads / other
@@ -876,15 +942,16 @@ export default function ChatPage() {
                   </div>
                 </div>
                 <h1 className="text-balance font-display text-[26px] leading-tight text-ink sm:text-4xl">
-                  Ask life&rsquo;s hardest questions,{" "}
+                  What&rsquo;s on your path today,{" "}
                   <span className="text-maroon">
                     {user.name?.split(" ")[0] || "seeker"}
                   </span>
+                  ?
                 </h1>
                 <p className="mt-3 max-w-md text-balance text-[13px] text-ink-soft sm:text-sm">
-                  Describe your situation in plain words. Every answer is
-                  grounded in the {scripture.meta.fullName}. Nothing is
-                  invented.
+                  A question, a decision, a feeling, or even a quiet thought.
+                  Share whatever brings you here. Every answer is grounded in
+                  the {scripture.meta.fullName}. Nothing is invented.
                 </p>
 
                 <div className="mt-7 grid w-full gap-2.5 sm:mt-9 sm:grid-cols-2">
@@ -926,9 +993,14 @@ export default function ChatPage() {
                         />
                         <div className="min-w-0 flex-1">
                           {(() => {
-                            const lang: Lang = m.displayLang ?? "en";
+                            // contentLang defaults to "en" for legacy
+                            // messages that never recorded the field. The
+                            // visible language defaults to contentLang
+                            // unless the seeker has explicitly toggled.
+                            const contentLang: Lang = m.contentLang ?? "en";
+                            const lang: Lang = m.displayLang ?? contentLang;
                             const displayContent =
-                              lang === "en"
+                              lang === contentLang
                                 ? m.content
                                 : m.translations?.[lang] ?? m.content;
                             const isComplete = !!m.content && !streaming;
@@ -969,39 +1041,56 @@ export default function ChatPage() {
                                       size={12}
                                       className="mr-0.5 text-ink-muted"
                                     />
-                                    <button
-                                      onClick={() =>
-                                        setMessages(activeId, (msgs) =>
-                                          msgs.map((x) =>
-                                            x.id === m.id
-                                              ? { ...x, displayLang: "en" }
-                                              : x
+                                    {/* English pill is shown only when the
+                                        reply was authored in English. For
+                                        a Hindi-native reply we have no
+                                        hi -> en translate path yet, so
+                                        offering the toggle would just
+                                        dead-end. */}
+                                    {contentLang === "en" && (
+                                      <button
+                                        onClick={() =>
+                                          setMessages(activeId, (msgs) =>
+                                            msgs.map((x) =>
+                                              x.id === m.id
+                                                ? { ...x, displayLang: "en" }
+                                                : x
+                                            )
                                           )
-                                        )
-                                      }
-                                      className={cn(
-                                        "rounded-full border px-2.5 py-0.5 text-[11px] transition-colors",
-                                        lang === "en"
-                                          ? "border-maroon/40 bg-saffron-50 text-maroon"
-                                          : "border-parchment-muted bg-parchment text-ink-soft hover:border-maroon/30 hover:text-ink"
-                                      )}
-                                    >
-                                      English
-                                    </button>
+                                        }
+                                        className={cn(
+                                          "rounded-full border px-2.5 py-0.5 text-[11px] transition-colors",
+                                          lang === "en"
+                                            ? "border-maroon/40 bg-saffron-50 text-maroon"
+                                            : "border-parchment-muted bg-parchment text-ink-soft hover:border-maroon/30 hover:text-ink"
+                                        )}
+                                      >
+                                        English
+                                      </button>
+                                    )}
                                     {(
                                       Object.keys(LANG_LABEL) as Array<
                                         Exclude<Lang, "en">
                                       >
                                     ).map((code) => {
                                       const active = lang === code;
+                                      // Spinner reflects only pill-driven
+                                      // translation — the seeker asked for
+                                      // a language change, here's the wait.
                                       const busy = m.translating === code;
+                                      // Disabled also covers voice-triggered
+                                      // translation in flight, so a quick
+                                      // double-tap (Listen, then pill)
+                                      // can't kick off a duplicate fetch.
+                                      const blocked =
+                                        busy || m.voiceTranslating === code;
                                       return (
                                         <button
                                           key={code}
                                           onClick={() =>
                                             translate(activeId, m.id, code)
                                           }
-                                          disabled={busy}
+                                          disabled={blocked}
                                           className={cn(
                                             "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors disabled:opacity-60",
                                             active
@@ -1016,6 +1105,34 @@ export default function ChatPage() {
                                         </button>
                                       );
                                     })}
+                                    <span
+                                      aria-hidden
+                                      className="mx-1 h-3 w-px bg-parchment-muted"
+                                    />
+                                    {/* Voice player: pass the message
+                                        content directly when the reply is
+                                        already Hindi (skips the translate
+                                        round trip entirely) and ask the
+                                        translate helper not to flip the
+                                        displayed language when audio is
+                                        all the user wants. */}
+                                    <MessageVoicePlayer
+                                      hindiText={
+                                        contentLang === "hi"
+                                          ? m.content
+                                          : m.translations?.hi
+                                      }
+                                      isTranslating={
+                                        contentLang === "en" &&
+                                        (m.translating === "hi" ||
+                                          m.voiceTranslating === "hi")
+                                      }
+                                      onRequestTranslation={() =>
+                                        translate(activeId, m.id, "hi", {
+                                          setDisplay: false,
+                                        })
+                                      }
+                                    />
                                   </div>
                                 )}
                               </>
@@ -1065,18 +1182,24 @@ export default function ChatPage() {
                   onChange={changeModel}
                   disabled={streaming}
                 />
-                <button
-                  onClick={() => send(input)}
-                  disabled={!input.trim() || streaming}
-                  aria-label="Send"
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-maroon text-parchment shadow-[0_10px_24px_-8px_rgba(122,31,31,0.55)] transition-all hover:bg-maroon-deep hover:shadow-[0_14px_32px_-6px_rgba(122,31,31,0.6)] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {streaming ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-parchment border-t-transparent" />
-                  ) : (
-                    <ArrowUp size={17} />
-                  )}
-                </button>
+                <div className="flex items-center gap-2">
+                  {/* Voice input. Transcript is fed straight into send()
+                      so a confirmed transcription auto-submits — the
+                      seeker speaks, the message goes. */}
+                  <MicButton disabled={streaming} onSubmit={send} />
+                  <button
+                    onClick={() => send(input)}
+                    disabled={!input.trim() || streaming}
+                    aria-label="Send"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-maroon text-parchment shadow-[0_10px_24px_-8px_rgba(122,31,31,0.55)] transition-all hover:bg-maroon-deep hover:shadow-[0_14px_32px_-6px_rgba(122,31,31,0.6)] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {streaming ? (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-parchment border-t-transparent" />
+                    ) : (
+                      <ArrowUp size={17} />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
             <p className="mt-2 text-center text-[11px] text-ink-muted">

@@ -17,6 +17,7 @@ import type {
   InfoKind,
   RetrievedVerse,
 } from "@/lib/scriptures/types";
+import { detectLang, hasDevanagari, type Lang } from "@/lib/i18n";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -163,7 +164,7 @@ function looksLikeRealWord(word: string): boolean {
 }
 
 function isGibberish(msg: string): boolean {
-  if (/[ऀ-ॿ]/.test(msg)) return false;
+  if (hasDevanagari(msg)) return false;
   const cleaned = msg.toLowerCase().replace(/[^a-z\s]/g, " ").trim();
   if (!cleaned) return false;
   const words = cleaned.split(/\s+/).filter(Boolean);
@@ -180,6 +181,29 @@ const GIBBERISH_BANK = [
 
 function pickGibberishFallback(): string {
   return GIBBERISH_BANK[Math.floor(Math.random() * GIBBERISH_BANK.length)];
+}
+
+/**
+ * Reply-language directive appended to whichever scripture system prompt
+ * is in play. Lets the seeker write in Hindi and get a Hindi-native LLM
+ * reply (higher quality than translating an English answer post-hoc, no
+ * extra round trip, lower Groq TPM pressure).
+ *
+ * Scripture modules themselves stay untouched — this is purely an
+ * additive language instruction, not a content rewrite. Verse references
+ * and Sanskrit transliterations stay in their canonical form so the chat
+ * renderer (verse cards) keeps working on any output language.
+ */
+function languageDirective(lang: Lang): string {
+  if (lang !== "hi") return "";
+  return `\n\nIMPORTANT — REPLY LANGUAGE: The seeker is writing in Hindi (Devanagari). Reply ENTIRELY in modern, warm, conversational Hindi (Devanagari script). Do NOT switch to English mid-reply.
+
+Preserve verbatim, in their original form:
+- Verse references like "Bhagavad Gita 6.17" — keep the English words "Bhagavad Gita" and the chapter.verse numbers exactly. Do NOT transliterate to Devanagari.
+- Sanskrit shloka transliterations in IAST (yuktāhāra-vihārasya etc.) — copy byte-for-byte, do NOT translate or transliterate.
+- The brand name "MysticAI" — keep in Roman letters.
+
+Use natural Hindi punctuation (। , ?) and avoid em or en dashes anywhere. Match the tone the seeker is reaching for: contemplative, warm, grounded.`;
 }
 
 /* -------------------------------------------------------------------------
@@ -399,6 +423,12 @@ export async function POST(req: NextRequest) {
 
   const scripture = getScripture(modelId);
   const apiKey = process.env.GEMINI_API_KEY;
+  // Reply in the language the seeker is writing in. Hindi → Hindi-native
+  // LLM output; everything else falls through to the scripture's default
+  // English voice. Detection is coarse — any Devanagari in the message
+  // marks the whole turn as Hindi.
+  const userLang = detectLang(message);
+  const langInstruction = languageDirective(userLang);
 
   // SAFETY GATE — universal, bypasses LLM and scripture.
   if (isCrisis(message)) {
@@ -423,7 +453,10 @@ export async function POST(req: NextRequest) {
         temperature: 0.8,
         stream: true,
         messages: [
-          { role: "system", content: scripture.greetingSystemPrompt() },
+          {
+            role: "system",
+            content: scripture.greetingSystemPrompt() + langInstruction,
+          },
           ...history.map((m) => ({ role: m.role, content: m.content })),
           { role: "user" as const, content: message },
         ],
@@ -508,7 +541,7 @@ export async function POST(req: NextRequest) {
   const userContent = `${blockHeader} (the only scripture you may use):\n\n${retrievedBlock}\n\n---\n\nThe seeker asks:\n${message}`;
 
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-    { role: "system", content: scripture.systemPrompt() },
+    { role: "system", content: scripture.systemPrompt() + langInstruction },
     ...history.map((m) => ({ role: m.role, content: m.content })),
     { role: "user" as const, content: userContent },
   ];
