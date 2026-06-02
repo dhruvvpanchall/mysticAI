@@ -18,9 +18,12 @@ export const maxDuration = 30;
  * changes. The version is folded into the cache key, so old (possibly bad)
  * entries are atomically ignored without needing to wipe Firestore. A prior
  * LLM glitch had poisoned the `who are you?` Hindi translation across users;
- * v2 is the first version that ships the streaming + validation guards.
+ * v2 added streaming + validation guards; v3 rewrote the prompt around
+ * meaning-first translation; v4 adds the question→statement guard and a
+ * greeting-question example after the model started answering "How's your
+ * day going?" with "मेरा दिन अच्छा चल रहा है" instead of translating it.
  */
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v4";
 
 /**
  * Content-addressed cache key. Same (version, lang, text) from any seeker
@@ -56,6 +59,44 @@ function isValidTranslation(
   const srcLen = Math.max(source.length, 30);
   if (text.length < srcLen * 0.5) return false;
   if (text.length > srcLen * 3 + 200) return false;
+  // POV-swap guard for Hindi. The model occasionally flips the opening
+  // "I'm doing well" into "आप अच्छे हैं" ("you are well"), which inverts
+  // who the sentence is about. If the SOURCE opens with first-person
+  // ("I'm/I am well/good/fine/doing well/great/okay") but the Hindi
+  // OUTPUT opens with second-person ("आप ... हैं"), reject so the bad
+  // text cannot get pinned in the global cache for future seekers.
+  if (lang === "hi") {
+    const srcOpensFirstPerson =
+      /^\s*(?:i'?m|i\s+am)\s+(?:doing\s+)?(?:well|good|fine|great|okay|ok|alright|happy|grateful|here|glad)/i.test(
+        source
+      );
+    const outOpensSecondPerson =
+      /^\s*आप\s+\S{1,40}\s*(?:हैं|हो)/.test(text);
+    if (srcOpensFirstPerson && outOpensSecondPerson) {
+      console.warn(
+        "[translate] rejected POV swap: source opens first-person, output opens second-person"
+      );
+      return false;
+    }
+    // Question → statement guard. The model occasionally ANSWERS a
+    // greeting-question ("How's your day going?") instead of translating
+    // it, producing a statement like "मेरा दिन अच्छा चल रहा है". If the
+    // source contains a question mark or opens with an interrogative
+    // word, the Hindi output MUST also contain a question mark.
+    const srcHasQuestion =
+      /[?？]/.test(source) ||
+      /^\s*(?:how|what|when|where|why|who|which|whom|whose|are|is|do|does|did|can|could|will|would|should|may|might)\b/i.test(
+        source.trim()
+      );
+    const outHasQuestion = /[?？]/.test(text);
+    if (srcHasQuestion && !outHasQuestion) {
+      console.warn(
+        "[translate] rejected: source is a question but output is a statement",
+        { source: source.slice(0, 80), output: text.slice(0, 80) }
+      );
+      return false;
+    }
+  }
   return true;
 }
 
@@ -114,14 +155,34 @@ const LANGS: Record<string, LangSpec> = {
   hi: {
     name: "Hindi",
     script: "Devanagari",
-    note: "Use warm, simple, conversational Hindi that ordinary readers understand — not heavily Sanskritized or overly formal.",
+    note: "Use modern, warm, conversational Hindi that ordinary readers understand — not heavily Sanskritized or overly formal.",
   },
 };
 
 function systemPrompt(lang: LangSpec): string {
-  return `You translate text from English into ${lang.name} (${lang.script} script) for a Bhagavad Gita spiritual guidance app.
+  return `You are an expert ${lang.name} translator for spiritual, philosophical, and self-reflection content. You translate text from English into ${lang.name} (${lang.script} script) for the Bhagavad Gita guidance app MysticAI.
 
-ABSOLUTE RULES — follow every one:
+YOUR PHILOSOPHY — the spirit of every translation:
+
+- Translate MEANING, CONTEXT, and EMOTIONAL INTENT — never word-for-word.
+- The output must feel as though it was originally written in ${lang.name} by a thoughtful native speaker, not converted from English.
+- Preserve the spiritual, reflective, contemplative tone of the source.
+- ${lang.note}
+- Adapt metaphors, idioms, and turns of phrase contextually whenever a direct rendering would sound foreign, mechanical, or stilted. Find the closest ${lang.name} expression that carries the same feeling.
+- Maintain the same emotional impact, gravity, and warmth as the source text.
+- Do NOT introduce new interpretations or omit important nuances.
+
+METAPHOR ADAPTATION EXAMPLE — this is the standard:
+
+INPUT:
+The Gita is showing you what fear sounds like when it is dressed as commentary.
+
+GOOD (meaning-first, native-feeling):
+गीता दिखा रही है कि जब भय टिप्पणी या आलोचना का रूप धारण कर लेता है, तो उसकी आवाज़ कैसी होती है।
+
+AVOID literal word-for-word renderings ("when fear is wearing the dress of commentary") that sound mechanical and break the spell.
+
+STRUCTURAL RULES — non-negotiable, regardless of philosophy:
 
 1. TRANSLATE ONLY WHAT IS GIVEN. Do NOT add any content that is not in the input.
    - Do NOT invent, fabricate, or add a Bhagavad Gita verse, citation, blockquote, or Sanskrit line if the input has none. If the input is a plain greeting or simple conversation, the output is also a plain greeting or simple conversation in ${lang.name} — nothing more.
@@ -138,7 +199,7 @@ ABSOLUTE RULES — follow every one:
 
 4. When (and ONLY when) the input contains a verse blockquote with exactly THREE lines, keep them in this EXACT order and format:
    Line 1: \`> **Bhagavad Gita C.V**\`  — the reference, untouched.
-   Line 2: \`> "translated verse text"\`  — translate this English text into ${lang.name} (${lang.script}), keep the surrounding straight quotes.
+   Line 2: \`> "translated verse text"\`  — translate this English text into ${lang.name} (${lang.script}) with the meaning-first philosophy above; keep the surrounding straight quotes.
    Line 3: \`> _sanskrit transliteration_\`  — wrapped in single underscores; copy this line VERBATIM, byte for byte, including every diacritic (ā ī ū ṛ ṣ ṇ ḍ ḥ ṁ etc.). Do NOT translate, transliterate, retype, or alter it.
 
    NEVER swap, merge, or reorder these three lines. NEVER add a fourth line.
@@ -151,13 +212,33 @@ ABSOLUTE RULES — follow every one:
    - "I sense" → "मुझे लगता है" or "मैं अनुभव करता हूँ" — NEVER "आप अनुभव करते हैं".
    - Whoever is the subject of the English sentence is the subject of the ${lang.name} sentence. Do not swap speaker and listener.
 
-6. ${lang.note}
+5b. PRESERVE QUESTION vs STATEMENT. This is CRITICAL — equally important as POV.
+   - If the source is a QUESTION (ends with "?" or starts with how / what / when / where / why / who / which / are / is / do / does / can / will / should), the ${lang.name} output MUST be a question, ending with "?".
+   - If the source is a STATEMENT, the output must be a statement.
+   - DO NOT ANSWER the question — translate it. "How's your day going?" is the AI asking the seeker about their day; it must become "आपका दिन कैसा चल रहा है?" — never "मेरा दिन अच्छा चल रहा है" (which means "my day is going well" — that would be ANSWERING the question, which is wrong).
+   - "What's on your mind?" → "आपके मन में क्या है?" — NEVER "आपके मन में कुछ नहीं है" (a statement, an answer).
+   - "Is something weighing on you?" → "क्या आप पर कुछ बोझ है?" — NEVER "हाँ, आप पर कुछ बोझ है" (an answer).
 
-7. Keep the warm, grounded tone of the original.
+6. NO em dashes or en dashes anywhere in the ${lang.name} output. Use commas, full stops, or natural sentence breaks instead. Em dashes read as foreign punctuation in Hindi.
 
-8. Output ONLY the translated text — no preamble, no notes, no "Translation:" header, no surrounding commentary.
+7. Output ONLY the translated text — no preamble, no notes, no "Translation:" header, no surrounding commentary.
 
-EXAMPLE A — plain greeting, AI speaking about itself in first person (notice "I am" → "मैं हूँ", NOT "आप हैं"):
+QUALITY BAR — silently self-check each output before emitting:
+- Does it sound like a native ${lang.name} speaker wrote it, or like a translation?
+- Are metaphors and idioms rendered with their feeling intact, not their literal words?
+- Is the spiritual, contemplative tone preserved?
+- Does it carry the same emotional weight as the source?
+If any answer is no, refine before emitting.
+
+EXAMPLE A — the AI answering "how are you" about itself. The first sentence MUST be first-person ("मैं"). A real production failure had the model render "I'm doing well" as "आप अच्छे हैं" (you are well), inverting who the sentence describes. DO NOT do that.
+
+INPUT:
+I'm doing well, thank you for asking. I'm here to listen, learn, and help in any way I can. It's a pleasure to connect with you. What's on your mind, and how can I support you today?
+
+OUTPUT:
+मैं अच्छा हूँ, पूछने के लिए धन्यवाद। मैं यहाँ सुनने, सीखने और जिस तरह से भी संभव हो, आपकी सहायता करने के लिए हूँ। आपसे जुड़कर खुशी हो रही है। आपके मन में क्या है, और आज मैं आपकी किस तरह सहायता कर सकता हूँ?
+
+EXAMPLE A2 — longer first-person greeting, same rule (notice every "I am / I sense / I'm" stays as "मैं / मुझे"):
 
 INPUT:
 I am well and grateful for this moment to connect with you. As we come together, I sense that you may be seeking guidance or clarity on something. If there's something on your mind that you'd like to explore, I'm here to listen and offer support.
@@ -173,7 +254,23 @@ Welcome. I'm happy to be with you in this moment. Is there something on your min
 OUTPUT:
 स्वागत है। इस क्षण में आपके साथ होकर मुझे खुशी है। क्या आपके मन में कोई बात है जिसे आप साझा करना या जानना चाहेंगे?
 
-EXAMPLE C — answer with a verse, blockquote preserved exactly:
+EXAMPLE C — short greeting that ends with a question. The question MUST stay a question. A real production failure had the model render "How's your day going?" as "मेरा दिन अच्छा चल रहा है" (my day is going well — an answer, a statement). DO NOT do that. Translate the question; do not answer it.
+
+INPUT:
+Hello. How's your day going?
+
+OUTPUT:
+नमस्ते। आपका दिन कैसा चल रहा है?
+
+EXAMPLE C2 — another short greeting question, same rule:
+
+INPUT:
+Hey, welcome. How's your day been?
+
+OUTPUT:
+नमस्ते, स्वागत है। आपका दिन कैसा रहा?
+
+EXAMPLE D — answer with a verse, blockquote preserved exactly, meaning-first verse translation:
 
 INPUT:
 **Your mind is racing** with worry.
@@ -185,13 +282,13 @@ INPUT:
 **What this means:** Krishna teaches that balance dissolves suffering.
 
 OUTPUT:
-**आपका मन दौड़ रहा है** चिंता से।
+**आपका मन** चिंता से दौड़ रहा है।
 
 > **Bhagavad Gita 6.17**
-> "योग उस व्यक्ति के लिए दुःख का नाश करने वाला बनता है जो खाने-पीने और मनोरंजन में संयम रखता है।"
+> "जो व्यक्ति आहार और मनोरंजन में संतुलन रखता है, उसके लिए योग ही दुःख का नाश करने वाला बन जाता है।"
 > _yuktāhāra-vihārasya yukta-cheṣhṭasya karmasu_
 
-**इसका अर्थ है:** कृष्ण सिखाते हैं कि संतुलन दुःख को मिटा देता है।`;
+**इसका अर्थ है:** कृष्ण सिखाते हैं कि संतुलन दुःख को घोल देता है।`;
 }
 
 export async function POST(req: NextRequest) {
@@ -246,8 +343,15 @@ export async function POST(req: NextRequest) {
   try {
     const completion = await client.chat.completions.create({
       model: MODEL,
-      max_tokens: 4096,
-      temperature: 0.3,
+      // Cap output at 2048 tokens — chat translations are short and the
+      // longest daily-wisdom reply tested under 1500. Groq (and most TPM
+      // gates) count max_tokens toward the request budget, so a 4096
+      // reservation was tripping the 6k TPM free tier on every call.
+      max_tokens: 2048,
+      // Lower temperature pushes the model to follow the structural and POV
+      // rules more strictly. Creative paraphrasing here was the root of the
+      // "I'm doing well" → "आप अच्छे हैं" failure.
+      temperature: 0.15,
       stream: true,
       messages: [
         { role: "system", content: systemPrompt(spec) },

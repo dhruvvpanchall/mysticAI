@@ -49,6 +49,11 @@ export interface StoredMessage {
   role: "user" | "assistant";
   content: string;
   translations?: Partial<Record<Lang, string>>;
+  /** Language the `content` was authored in. Assistant replies adopt the
+   *  language the seeker wrote in (see /api/chat languageDirective), so
+   *  this is set once per assistant turn after streaming completes.
+   *  Legacy docs without the field default to "en" at the call site. */
+  contentLang?: Lang;
   createdAt: number;
 }
 
@@ -107,6 +112,9 @@ export async function listConversations(
     );
     const messages: StoredMessage[] = msgSnap.docs.map((m) => {
       const d = m.data();
+      const rawLang = d.contentLang;
+      const contentLang: Lang | undefined =
+        rawLang === "en" || rawLang === "hi" ? rawLang : undefined;
       return {
         id: m.id,
         role: d.role as "user" | "assistant",
@@ -114,6 +122,7 @@ export async function listConversations(
         translations: (d.translations ?? undefined) as
           | Partial<Record<Lang, string>>
           | undefined,
+        contentLang,
         createdAt: tsToNumber(d.createdAt),
       };
     });
@@ -203,6 +212,7 @@ export async function appendMessage(
     content: msg.content,
     createdAt: serverTimestamp(),
     ...(msg.translations ? { translations: msg.translations } : {}),
+    ...(msg.contentLang ? { contentLang: msg.contentLang } : {}),
   });
   await updateConversation(uid, convId, { updatedAt: true });
 }

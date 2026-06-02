@@ -89,7 +89,16 @@ export function StreakModal({ open, uid, onClose }: Props) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 p-3 backdrop-blur-md sm:p-6"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 backdrop-blur-md"
+          // Safe-area aware padding so the modal clears iOS notch + home
+          // indicator on iPhone XR and similar devices.
+          style={{
+            paddingTop: "max(0.75rem, calc(env(safe-area-inset-top) + 0.75rem))",
+            paddingBottom:
+              "max(0.75rem, calc(env(safe-area-inset-bottom) + 0.75rem))",
+            paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
+            paddingRight: "max(0.75rem, env(safe-area-inset-right))",
+          }}
           onClick={onClose}
         >
           <motion.div
@@ -98,7 +107,13 @@ export function StreakModal({ open, uid, onClose }: Props) {
             exit={{ opacity: 0, scale: 0.97, y: 6 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md overflow-hidden rounded-3xl border border-saffron/25 bg-gradient-to-br from-[#120a1d] via-[#0e0a18] to-[#180f1f] shadow-[0_30px_80px_-30px_rgba(244,165,42,0.5)]"
+            // dvh + safe-area subtraction keeps the card inside the visible
+            // viewport regardless of iOS Safari's collapsing chrome.
+            style={{
+              maxHeight:
+                "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem)",
+            }}
+            className="relative flex w-full max-w-md flex-col overflow-hidden rounded-3xl border border-saffron/25 bg-gradient-to-br from-[#120a1d] via-[#0e0a18] to-[#180f1f] shadow-[0_30px_80px_-30px_rgba(244,165,42,0.5)]"
           >
             <div
               aria-hidden
@@ -124,8 +139,9 @@ export function StreakModal({ open, uid, onClose }: Props) {
               </button>
             </div>
 
-            {/* Body */}
-            <div className="relative px-6 pb-7 pt-7">
+            {/* Body — scrolls when constrained on small viewports so the
+                rank ladder never gets cut off behind the home indicator. */}
+            <div className="modal-scroll relative flex-1 overflow-y-auto px-6 pb-7 pt-7">
               {loading ? (
                 <div className="flex h-40 items-center justify-center text-saffron/60">
                   Loading…

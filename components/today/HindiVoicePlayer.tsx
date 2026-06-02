@@ -4,145 +4,31 @@ import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, Play, Pause, Square } from "lucide-react";
 import type { Lesson } from "@/lib/practice/types";
+import { useHindiVoice } from "@/lib/voice/useHindiVoice";
+import { buildLessonNarration } from "@/lib/voice";
 
 interface Props {
   lesson: Lesson;
 }
 
-type Status = "idle" | "loading" | "playing" | "paused";
-
 /**
- * Browser-native Hindi voice playback for the day's verse. Uses
- * the Web Speech API — no API key, no streaming endpoint, no cost.
- * Voice availability and pronunciation depend on the user's OS.
- *
- * Script is assembled from the lesson's Hindi-language fields with
- * short Devanagari connectors so the narration flows like a teacher
- * recounting the verse — not a flat list of fields.
+ * Hindi voice player for the Daily Wisdom modal. Consumes the shared
+ * voice provider via [[useHindiVoice]] — no TTS engine code lives here,
+ * just the lesson-card UI shell (avatar bars, status copy, play
+ * controls). Narration script is built by [[buildLessonNarration]].
  */
 export function HindiVoicePlayer({ lesson }: Props) {
-  const [status, setStatus] = React.useState<Status>("idle");
-  const [hindiVoice, setHindiVoice] = React.useState<SpeechSynthesisVoice | null>(null);
-  const [voiceIsMale, setVoiceIsMale] = React.useState(false);
-  const [voiceReady, setVoiceReady] = React.useState(false);
-  const utteranceRef = React.useRef<SpeechSynthesisUtterance | null>(null);
+  const { status, voiceInfo, ready, supported, play, pause, resume, stop } =
+    useHindiVoice();
 
-  // Resolve the best Hindi voice on the device, preferring a male
-  // narrator. The Web Speech API doesn't expose a gender property in
-  // any cross-browser way, so we lean on known male voice names that
-  // ship with major platforms (Microsoft Hemant on Windows, Google
-  // hi-IN male on Chrome). Falls back to any Hindi voice, then to
-  // null so the engine uses the system default.
-  React.useEffect(() => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      setVoiceReady(true);
-      return;
-    }
-    const MALE_HINDI_HINTS = [
-      "hemant",
-      "madhur",
-      "ravi",
-      "aditya",
-      "rishi",
-      "male",
-    ];
-    function pick() {
-      const voices = window.speechSynthesis.getVoices();
-      const hindiVoices = voices.filter((v) =>
-        v.lang.toLowerCase().startsWith("hi")
-      );
-      const maleHi = hindiVoices.find((v) => {
-        const n = v.name.toLowerCase();
-        return MALE_HINDI_HINTS.some((hint) => n.includes(hint));
-      });
-      const fallbackHi = hindiVoices.find((v) => v.lang === "hi-IN") ?? hindiVoices[0];
-      const chosen = maleHi ?? fallbackHi ?? null;
-      setHindiVoice(chosen);
-      setVoiceIsMale(Boolean(maleHi));
-      setVoiceReady(true);
-    }
-    pick();
-    window.speechSynthesis.addEventListener("voiceschanged", pick);
-    return () => {
-      window.speechSynthesis.removeEventListener("voiceschanged", pick);
-    };
-  }, []);
-
-  // Stop any speech when the lesson changes or the component unmounts —
-  // otherwise switching verses leaves the prior verse still narrating.
+  // Switching verses must not leave the previous narration playing.
   React.useEffect(() => {
     return () => {
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
+      stop();
     };
-  }, [lesson.ref]);
+  }, [lesson.ref, stop]);
 
-  function buildScript(): string {
-    // Full Hindi narration of the day's lesson: chapter intro, the
-    // Sanskrit shloka, its Hindi translation, the editorial reading
-    // ("what Krishna is teaching"), the modern-life application, and
-    // a short closing chintan. Everything in Devanagari so the Hindi
-    // voice never has to wrestle with English vocabulary.
-    return [
-      `आज की दैनिक शिक्षा। भगवद गीता, अध्याय ${lesson.chapter}, श्लोक ${lesson.verse}।`,
-      `पहले श्लोक सुनिए।`,
-      lesson.sanskrit,
-      `अब इस श्लोक का हिंदी अर्थ।`,
-      lesson.hindi,
-      `यहाँ कृष्ण क्या सिखा रहे हैं।`,
-      lesson.hindiExplanation,
-      `और आधुनिक जीवन में इसका अर्थ।`,
-      lesson.hindiModernLife,
-      `यही आज का चिंतन है। शांति से इस पर मनन कीजिए।`,
-    ].join(" ");
-  }
-
-  function handlePlay() {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    if (status === "paused") {
-      window.speechSynthesis.resume();
-      setStatus("playing");
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(buildScript());
-    u.lang = "hi-IN";
-    if (hindiVoice) u.voice = hindiVoice;
-    u.rate = 0.9;
-    // Keep a true male voice at neutral pitch; nudge fallback voices
-    // downward so a default female voice still reads in a warmer,
-    // teacher-like register.
-    u.pitch = voiceIsMale ? 0.98 : 0.8;
-    u.onend = () => setStatus("idle");
-    u.onerror = () => setStatus("idle");
-    utteranceRef.current = u;
-    setStatus("loading");
-    // Tiny defer so the loading state paints before the engine kicks in.
-    setTimeout(() => {
-      window.speechSynthesis.speak(u);
-      setStatus("playing");
-    }, 60);
-  }
-
-  function handlePause() {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    window.speechSynthesis.pause();
-    setStatus("paused");
-  }
-
-  function handleStop() {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    setStatus("idle");
-  }
-
-  const supported =
-    typeof window !== "undefined" && "speechSynthesis" in window;
-
-  if (!voiceReady) {
-    return null;
-  }
+  if (!ready) return null;
 
   if (!supported) {
     return (
@@ -152,7 +38,13 @@ export function HindiVoicePlayer({ lesson }: Props) {
     );
   }
 
-  const noHindiVoice = !hindiVoice;
+  const handlePrimary = () => {
+    if (status === "playing") return pause();
+    if (status === "paused") return resume();
+    play(buildLessonNarration(lesson));
+  };
+
+  const voiceIsMale = voiceInfo?.isMale ?? false;
 
   return (
     <div className="mt-5 overflow-hidden rounded-2xl border border-saffron/25 bg-gradient-to-r from-saffron/[0.08] via-white/[0.02] to-maroon/[0.08] p-4 sm:p-5">
@@ -197,7 +89,7 @@ export function HindiVoicePlayer({ lesson }: Props) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-saffron/85">
             <span>Listen in Hindi</span>
-            {hindiVoice && (
+            {voiceInfo && (
               <span
                 className={
                   "rounded-full border px-1.5 py-px text-[9px] font-medium normal-case tracking-normal " +
@@ -205,7 +97,11 @@ export function HindiVoicePlayer({ lesson }: Props) {
                     ? "border-saffron/40 bg-saffron/10 text-saffron/90"
                     : "border-white/15 bg-white/[0.04] text-white/55")
                 }
-                title={voiceIsMale ? "Male Hindi voice active" : "Install a male Hindi voice for the intended narration"}
+                title={
+                  voiceIsMale
+                    ? "Male Hindi voice active"
+                    : "Install a male Hindi voice for the intended narration"
+                }
               >
                 {voiceIsMale ? "♂ male" : "default"}
               </span>
@@ -218,18 +114,14 @@ export function HindiVoicePlayer({ lesson }: Props) {
                 ? "रुका हुआ है। जारी रखने के लिए दबाइए।"
                 : status === "loading"
                   ? "तैयारी हो रही है…"
-                  : noHindiVoice
-                    ? "हिंदी आवाज़ इंस्टॉल नहीं है, सिस्टम की आवाज़ चलेगी।"
-                    : voiceIsMale
-                      ? "श्लोक, अर्थ और मनन हिंदी में सुनें।"
-                      : "श्लोक और अर्थ हिंदी में सुनें। पुरुष आवाज़ के लिए Microsoft Hemant इंस्टॉल कीजिए।"}
+                  : "श्लोक, अर्थ और मनन हिंदी में सुनें।"}
           </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
           {status === "playing" ? (
             <button
-              onClick={handlePause}
+              onClick={handlePrimary}
               aria-label="Pause"
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-saffron/40 bg-saffron/15 text-saffron transition-colors hover:bg-saffron/25"
             >
@@ -237,7 +129,7 @@ export function HindiVoicePlayer({ lesson }: Props) {
             </button>
           ) : (
             <button
-              onClick={handlePlay}
+              onClick={handlePrimary}
               disabled={status === "loading"}
               aria-label={status === "paused" ? "Resume" : "Play"}
               className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-saffron text-[#120a1d] shadow-[0_4px_16px_-4px_rgba(244,165,42,0.7)] transition-all hover:bg-[#ffb44a] disabled:opacity-60"
@@ -247,7 +139,7 @@ export function HindiVoicePlayer({ lesson }: Props) {
           )}
           {(status === "playing" || status === "paused") && (
             <button
-              onClick={handleStop}
+              onClick={stop}
               aria-label="Stop"
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white"
             >
